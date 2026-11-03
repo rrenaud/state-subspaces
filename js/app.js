@@ -121,7 +121,10 @@
   // Hovering a state writes its z-score and z × weight on every row of each basis vector; the products sum to
   // the state's coordinate along that vector. The same state is ringed in both plots.
   const sgn = x => (x >= 0 ? "+" : "−") + Math.abs(x).toFixed(2);
+  let shown = -1;
   function showState(i) {
+    if (i === shown) return;
+    shown = i;
     const it = STATES.items[i];
     document.querySelectorAll("#b1 .vec, #b2 .vec").forEach(el => {
       const v = st.view[el.dataset.p][+el.dataset.k];
@@ -131,7 +134,7 @@
         sum += c;
         row.querySelector(".bz").textContent = sgn(it.z[j]);
         row.querySelector(".bv").textContent = sgn(c);
-        row.classList.toggle("big", Math.abs(c) >= 0.3);
+        row.classList.toggle("hot", Math.abs(c) >= 0.3);
       });
       el.querySelector(".vt span").textContent = "· " + it.name + ": z × weight sums to " + sgn(sum);
     });
@@ -140,11 +143,12 @@
     $("lab").classList.add("hovering");
   }
   function clearState() {
-    if (!$("lab").classList.contains("hovering")) return;
+    if (shown < 0) return;
+    shown = -1;
     document.querySelectorAll("#b1 .br, #b2 .br").forEach(row => {
       row.querySelector(".bz").textContent = "";
       row.querySelector(".bv").textContent = row.querySelector(".bv").dataset.w;
-      row.classList.remove("big");
+      row.classList.remove("hot");
     });
     document.querySelectorAll("#b1 .vt span, #b2 .vt span").forEach(sp => (sp.textContent = sp.dataset.meta));
     document.querySelectorAll(".sc .hl").forEach(m => m.classList.remove("hl"));
@@ -157,6 +161,8 @@
   }
 
   function render() {
+    shown = -1;
+    $("lab").classList.remove("hovering");
     const ds = DS[st.ds], feats = ds.feats, n = feats.length, r = st.r;
     const I1 = members(ds, st.g1), I2 = members(ds, st.g2);
     const p1 = pca(I1.map(i => i.z), r), p2 = pca(I2.map(i => i.z), r);
@@ -263,10 +269,24 @@
     $("g2").onchange = e => { st.g2 = e.target.value; render(); };
     const lab = $("lab"), tip = document.createElement("div");
     tip.className = "tip"; tip.hidden = true; lab.appendChild(tip);
+    // The nearest state within 20 plot units of the pointer is the hovered one, so moving between marks
+    // switches states instead of flickering off in the gaps.
+    const nearest = (svg, e) => {
+      const m = svg.getScreenCTM();
+      if (!m) return null;
+      const p = new DOMPoint(e.clientX, e.clientY).matrixTransform(m.inverse());
+      let best = null, bd = 400;
+      svg.querySelectorAll(".hit").forEach(h => {
+        const d = (h.cx.baseVal.value - p.x) ** 2 + (h.cy.baseVal.value - p.y) ** 2;
+        if (d < bd) { bd = d; best = h; }
+      });
+      return best;
+    };
     lab.addEventListener("pointermove", e => {
-      const t = e.target.closest && e.target.closest(".hit");
+      const svg = e.target.closest && e.target.closest("svg.sc"), t = svg && nearest(svg, e);
       if (!t) { tip.hidden = true; clearState(); return; }
-      tip.textContent = t.dataset.t; tip.hidden = false;
+      if (tip.textContent !== t.dataset.t) tip.textContent = t.dataset.t;
+      tip.hidden = false;
       showState(+t.dataset.i);
       const b = lab.getBoundingClientRect();
       tip.style.left = Math.max(4, Math.min(e.clientX - b.left + 12, b.width - tip.offsetWidth - 4)) + "px";
