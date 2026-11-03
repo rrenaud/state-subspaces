@@ -41,13 +41,6 @@
     const m = Math.max(...series.map(s => Math.abs(s.v[j])));
     return m >= 0.3 ? " hi" : m < 0.15 ? " lo" : "";
   }
-  // The members at each end of a direction, e.g. the three highest and three lowest states along it.
-  function ends(items, v) {
-    const sc = items.map(it => [dot(it.z, v), it.name]).sort((p, q) => q[0] - p[0]);
-    const k = Math.min(3, Math.floor(sc.length / 2));
-    const hi = sc.slice(0, k).map(x => x[1]).join(", "), lo = sc.slice(-k).reverse().map(x => x[1]).join(", ");
-    return '<div class="ends"><span title="' + esc(hi) + '">▲ ' + esc(hi) + '</span><span title="' + esc(lo) + '">▼ ' + esc(lo) + "</span></div>";
-  }
   // All 50 states projected onto a basis, equal scale on both axes; the group's states are colored and labeled.
   // Each region has a color and a shape, so regions stay apart without relying on color alone.
   const SHAPE = { N: "circle", M: "square", S: "triangle", W: "diamond" };
@@ -247,8 +240,7 @@
         const nm = nameEnds(v);
         h += '<div class="vec" data-p="' + which + '" data-k="' + k + '"><div class="vt">' + sym + SUB[k] +
           ' <b class="vn">' + esc(nm.hi) + " ↔ " + esc(nm.lo) + '</b> <span data-meta="· ' + esc(meta) + '">· ' + esc(meta) + "</span></div>" +
-          bars(feats, [{ v, cls }], true) + sumScale(ds, v, cls) +
-          '<div class="vfoot"><div class="vd">' + esc(describe(v, feats)) + "</div>" + ends(items, v) + "</div></div>";
+          bars(feats, [{ v, cls }], true) + sumScale(ds, v, cls) + "</div>";
       });
       return h;
     };

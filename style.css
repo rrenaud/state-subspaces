@@ -86,9 +86,6 @@ td.n { text-align: right; font-family: var(--mono); white-space: nowrap; }
 .bh span { white-space: nowrap; overflow: hidden; }
 .bh span:nth-child(2), .bh span:last-child { text-align: right; } .bh span:nth-child(3) { text-align: center; }
 .vn { font-weight: 600; color: var(--fg); }
-.vfoot { display: grid; gap: .15rem; margin-top: .3rem; font-size: .78rem; }
-.vfoot .vd { min-height: 0 !important; font-size: .76rem; }
-.vfoot .ends { font-size: .76rem; }
 .sc .nm { fill: var(--fg); }
 .srow { display: grid; grid-template-columns: 5.6rem 2.8rem minmax(0, 1fr) 3.6rem; gap: .5rem; align-items: center;
   font-family: var(--mono); font-size: .72rem; margin-top: 4px; padding-top: 5px; border-top: 1px solid var(--rule); visibility: hidden; }
@@ -110,8 +107,6 @@ td.n { text-align: right; font-family: var(--mono); white-space: nowrap; }
 .cap { font-size: .78rem; color: var(--muted); margin: -.3rem 0 0; }
 .tip { position: absolute; pointer-events: none; background: var(--fg); color: var(--bg); font-family: var(--mono); font-size: .74rem;
   padding: .3rem .5rem; border-radius: 4px; white-space: nowrap; z-index: 5; }
-.ends { display: grid; font-size: .8rem; color: var(--muted); }
-.ends span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .lab select { font-family: var(--body); font-size: .95rem; color: var(--fg); background: var(--bg); border: 1px solid var(--rule); border-radius: 4px; padding: .3rem .4rem; max-width: 100%; }
 .sw { display: inline-block; width: .7rem; height: .7rem; border-radius: 2px; margin-right: .35rem; vertical-align: -1px; }
 .sw.s1, .bar.s1 { background: var(--s1); }
