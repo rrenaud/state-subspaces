@@ -110,16 +110,21 @@
     const w = Math.min(1, Math.abs(v)) * 50;
     return "left:" + (v >= 0 ? 50 : 50 - w) + "%;width:" + w + "%";
   }
-  function bars(feats, series) {
+  // Basis panels (marks = true) also carry a z tick and a z × weight bar, drawn while a state is hovered.
+  function bars(feats, series, marks) {
     const two = series.length === 2;
     return '<div class="bars">' + feats.map((f, j) =>
       '<div class="br' + rowCls(series, j) + '"><span>' + esc(f) + '</span><span class="bz"></span><span class="bt">' +
       series.map((s, k) => '<i class="bar ' + s.cls + (two ? (k ? " bot" : " top") : "") + '" style="' + barStyle(s.v[j]) + '"></i>').join("") +
+      (marks ? '<i class="zp ' + series[0].cls + '"></i><i class="zt"></i>' : "") +
       '</span><span class="bv" data-w="' + series.map(s => f2(s.v[j])).join(" ") + '">' + series.map(s => f2(s.v[j])).join(" ") + "</span></div>").join("") + "</div>";
   }
 
   // Hovering a state writes its z-score and z × weight on every row of each basis vector; the products sum to
   // the state's coordinate along that vector. The same state is ringed in both plots.
+  // The product bar shares the weight bar's ±1 scale, so it is the weight bar stretched by z (and flipped when
+  // z is negative); past ±1 it is clamped and squared off. The z tick has its own ±3 scale.
+  const ZMAX = 3, zpos = x => 50 + 50 * Math.max(-1, Math.min(1, x / ZMAX));
   const sgn = x => (x >= 0 ? "+" : "−") + Math.abs(x).toFixed(2);
   let shown = -1;
   function showState(i) {
@@ -134,6 +139,11 @@
         sum += c;
         row.querySelector(".bz").textContent = sgn(it.z[j]);
         row.querySelector(".bv").textContent = sgn(c);
+        const zp = row.querySelector(".zp");
+        zp.style.cssText = barStyle(c);
+        zp.classList.toggle("over", Math.abs(c) > 1);
+        zp.classList.toggle("neg", c < 0);
+        row.querySelector(".zt").style.left = zpos(it.z[j]) + "%";
         row.classList.toggle("hot", Math.abs(c) >= 0.3);
       });
       el.querySelector(".vt span").textContent = "· " + it.name + ": z × weight sums to " + sgn(sum);
@@ -177,12 +187,12 @@
         scatter(ds, items, U, sym) + '<p class="cap">All 50 states projected onto ' +
         (U.length === 1 ? sym + SUB[0] + ", one lane per region. " : U.length > 2
           ? sym + SUB[st.pair[0]] + " and " + sym + SUB[st.pair[1]] + " (pick the pair under Plot axes). " : "this basis. ") +
-        (items.length === ds.items.length ? "" : esc(label) + " full size and labeled. ") + "Hover a mark for the state.</p>";
+        (items.length === ds.items.length ? "" : esc(label) + " full size and labeled. ") + "Hover a mark for the state: on each row the faded bar is the weight, the solid bar on the same scale is z × weight, and the black tick is the z-score on a ±3 scale.</p>";
       U.forEach((v, k) => {
         const meta = rotated ? "rotated basis vector" : Math.round(frac[k] * 100) + "% of the group's variance";
         h += '<div class="vec" data-p="' + which + '" data-k="' + k + '"><div class="vt">' + sym + SUB[k] +
           ' <span data-meta="· ' + esc(meta) + '">· ' + esc(meta) + '</span></div><div class="vd">' +
-          esc(describe(v, feats)) + "</div>" + ends(items, v) + bars(feats, [{ v, cls }]) + "</div>";
+          esc(describe(v, feats)) + "</div>" + ends(items, v) + bars(feats, [{ v, cls }], true) + "</div>";
       });
       return h;
     };

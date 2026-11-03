@@ -74,6 +74,13 @@ td.n { text-align: right; font-family: var(--mono); white-space: nowrap; }
 #b1 .br, #b2 .br { grid-template-columns: 5.6rem 2.8rem minmax(0, 1fr) 3.6rem; }
 #b1 .bz, #b2 .bz { display: block; }
 .lab.hovering #b1 .br, .lab.hovering #b2 .br { opacity: 1; }
+.zp, .zt { position: absolute; display: none; }
+.zp { top: 4px; height: 6px; border-radius: 1px; }
+.zp.over { border-radius: 0; box-shadow: 2px 0 0 var(--fg); } .zp.over.neg { box-shadow: -2px 0 0 var(--fg); }
+.zp.s1 { background: var(--s1); } .zp.s2 { background: var(--s2); }
+.zt { top: -2px; height: 18px; width: 2px; margin-left: -1px; background: var(--fg); border-radius: 1px; }
+.lab.hovering .zp, .lab.hovering .zt { display: block; }
+.lab.hovering #b1 .bar, .lab.hovering #b2 .bar { opacity: .25; }
 .lab.hovering #b1 .br > span:first-child, .lab.hovering #b2 .br > span:first-child,
 .lab.hovering #b1 .br .bv, .lab.hovering #b2 .br .bv { color: var(--muted); font-weight: 400; }
 .lab.hovering #b1 .br.hot > span:first-child, .lab.hovering #b2 .br.hot > span:first-child,
