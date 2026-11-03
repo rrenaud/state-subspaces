@@ -1,0 +1,10 @@
+{
+  "name": "state-subspaces",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Principal angles between subspaces, explained on the 50 US states",
+  "scripts": {
+    "test": "node --test test/*.test.js",
+    "report": "node scripts/report.js"
+  }
+}

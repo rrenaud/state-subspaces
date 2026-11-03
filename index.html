@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>State Subspaces</title>
+<meta name="description" content="Principal angles between subspaces, explained on the 50 US states and their Census regions.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Literata:ital,opsz,wght@0,7..72,400;0,7..72,600;1,7..72,400&family=Schibsted+Grotesk:wght@500;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="wrap">
+<header>
+  <div class="eyebrow">state-subspaces · principal angles</div>
+  <h1>State Subspaces</h1>
+  <p class="lede">How to tell whether two groups vary along the same directions, using principal angles between subspaces. The example is the 50 US states, grouped by Census region.</p>
+</header>
+
+<h2>Subspaces, not bases</h2>
+<p>Take a group of data points and its top <span class="m">r</span> principal components. Those components span a subspace: the directions along which the group varies most. Two groups can be compared by asking how much their subspaces overlap.</p>
+<p>A subspace has many bases. Rotate the basis vectors among themselves and they still span the same subspace. So a comparison should depend only on the subspaces, not on which basis vectors happened to come out of the computation. Comparing basis vectors one by one fails this test.</p>
+
+<h2>Principal angles</h2>
+<p><strong>Principal angles</strong> answer the question greedily:</p>
+<ol>
+  <li>Find the unit vector in <span class="m">S₁</span> and the unit vector in <span class="m">S₂</span> that have the smallest angle between them. That angle is <span class="m">θ₁</span>, and the two vectors are the first pair of <em>principal vectors</em>.</li>
+  <li>Inside each subspace, restrict to directions orthogonal to the pair you just found, and repeat. That gives <span class="m">θ₂</span>, then <span class="m">θ₃</span>, up to <span class="m">θ_r</span>.</li>
+</ol>
+<p>If <span class="m">θ₁ = 0°</span>, the two subspaces share one direction exactly. If every angle is 0°, they are the same subspace. If every angle is 90°, each direction in one is orthogonal to each direction in the other.</p>
+<p><strong>How to compute them.</strong> Put orthonormal bases of the two subspaces in the columns of <span class="m">U₁</span> and <span class="m">U₂</span>. The small <span class="m">r×r</span> matrix <span class="m">U₁ᵀU₂</span> holds every dot product between a basis vector of <span class="m">S₁</span> and one of <span class="m">S₂</span>. Its entries depend on the bases chosen. Its singular values do not. The SVD <span class="m">U₁ᵀU₂ = P · diag(cos θᵢ) · Qᵀ</span> finds the rotation of each basis (<span class="m">U₁P</span> and <span class="m">U₂Q</span>) that matches the vectors up one to one, and the singular values are the cosines of the principal angles.</p>
+<p>A worked example in three dimensions, with <span class="m">r = 2</span>:</p>
+<div class="eq">S₁ = span{ x, y }                    the floor plane
+S₂ = span{ x, (y+z)/√2 }             the floor plane tilted 45° about the x axis
+
+U₁ᵀU₂ = [ x·x   x·(y+z)/√2 ]  =  [ 1   0    ]     singular values 1, 0.707
+        [ y·x   y·(y+z)/√2 ]     [ 0   0.707 ]     θ₁ = 0° (both contain x), θ₂ = 45°
+
+Use a different basis for S₁: { (x+y)/√2, (x−y)/√2 }
+U₁ᵀU₂ = [ 0.707   0.5 ]    every entry changed,
+        [ 0.707  −0.5 ]    singular values still 1, 0.707
+
+overlap = ‖U₁ᵀU₂‖²_F / r = (1² + 0.707²) / 2 = 0.75      (same with either basis)</div>
+<p><strong>A one-number summary.</strong> The overlap score <span class="m">‖U₁ᵀU₂‖²_F / r = (cos²θ₁ + … + cos²θ_r) / r</span> is the average of the squared cosines. Pick a unit vector in <span class="m">S₂</span> at random and project it onto <span class="m">S₁</span>: the score is the squared length it keeps, on average. It is 1 when the subspaces coincide, 0 when they are orthogonal, and the same in either direction.</p>
+<p><strong>The floor.</strong> A random unit vector in <span class="m">ℝⁿ</span> keeps, on average, <span class="m">1/n</span> of its squared length along any one fixed direction, so <span class="m">r/n</span> when projected onto any <span class="m">r</span>-dimensional subspace. Two unrelated subspaces therefore score about <span class="m">r/n</span>. In the 8 dimensions of the state data, with <span class="m">r = 2</span>, that is 0.25, which is not small.</p>
+<p><strong>The ceiling.</strong> Even one group does not produce the same subspace twice: a different sample of its data moves it. Comparing two halves of one group's data estimates how high a score can realistically go. A score means something only relative to both the floor and this ceiling.</p>
+
+<h2>Try it on the 50 states</h2>
+<p>Each state is a point in 8 dimensions: population and density on a log scale, median household income, median age, share with a bachelor's degree, share urban, share 65 and older, and poverty rate, each z-scored across all 50 states. Each Census region is a group, and its subspace is spanned by its top <span class="m">r</span> principal components.</p>
+<p>Each basis vector is a unit-length weighted sum of the features, and its squared weights add up to 1. So a weight of 0.7 means about half of that direction (0.7² ≈ 0.49) is that one feature. Features with large weights are drawn bold, and those near zero are faded. The plots show all 50 states projected onto each basis. Try <em>Rotate</em>: the basis vectors, the plot and the matrix change, and the angles do not.</p>
+
+<section class="lab" id="lab" aria-label="Principal angles tool">
+  <p class="dsnote" id="dsnote"></p>
+  <div class="controls">
+    <label for="g1"><span><span class="sw s1"></span>Subspace S₁</span><select id="g1"></select></label>
+    <label for="g2"><span><span class="sw s2"></span>Subspace S₂</span><select id="g2"></select></label>
+    <div class="seglab"><span>Dimension r</span><div class="seg" id="rseg">
+      <button type="button" data-r="1" aria-pressed="false">1</button>
+      <button type="button" data-r="2" aria-pressed="true">2</button>
+      <button type="button" data-r="3" aria-pressed="false">3</button>
+    </div></div>
+    <div class="seglab"><span>S₁ basis</span><div class="seg">
+      <button type="button" id="rot">Rotate</button>
+      <button type="button" id="unrot" disabled>Reset to principal components</button>
+    </div></div>
+  </div>
+  <div class="grid2">
+    <div class="cell" id="b1"></div>
+    <div class="cell" id="b2"></div>
+  </div>
+  <div class="grid2">
+    <div class="cell" id="angles"></div>
+    <div class="cell" id="scorebox"></div>
+  </div>
+</section>
+<p class="fine">The figures are approximate, roughly 2022 Census and ACS values typed from memory for illustration. Don't cite them.</p>
+
+<h2>Reading the state subspaces</h2>
+<p>Every number below comes from <code>node scripts/report.js</code>.</p>
+<p><strong>The national directions.</strong> The top three principal components of all 50 states are the main ways states differ from each other. The states at each end show what each one means:</p>
+<div class="scroll">
+<table>
+  <thead><tr><th>Direction</th><th>Largest weights</th><th>Variance</th><th>Low end</th><th>High end</th></tr></thead>
+  <tbody>
+    <tr><td><strong>1. Affluence</strong></td><td class="m">0.51 Income + 0.48 Bachelor's + 0.43 Urban − 0.39 Poverty</td><td class="n">41%</td><td>West Virginia, Mississippi, Arkansas</td><td>New Jersey, Massachusetts, Maryland</td></tr>
+    <tr><td><strong>2. Age</strong></td><td class="m">0.67 Median age + 0.63 Age 65+ + 0.27 log Density</td><td class="n">27%</td><td>Utah, Alaska, Texas</td><td>Maine, Vermont, New Hampshire</td></tr>
+    <tr><td><strong>3. Size</strong></td><td class="m">0.62 log Pop + 0.48 log Density + 0.47 Poverty − 0.25 Income</td><td class="n">21%</td><td>Alaska, North Dakota, Wyoming</td><td>Florida, Louisiana, Texas</td></tr>
+  </tbody>
+</table>
+</div>
+
+<p><strong>Each region against the nation.</strong> Each region's own top two directions, compared with the national pair (<span class="m">r = 2</span>). Smaller groups have noisier principal components, so they score lower even when nothing about them is unusual. The fair comparison is with random groups of the same number of states: the percentile says where the region falls among 2,000 of them.</p>
+<div class="scroll">
+<table>
+  <thead><tr><th>Region</th><th>θ₁, θ₂</th><th>Overlap</th><th>Random groups, same size: median</th><th>Percentile</th><th>Spread on affluence, age (nation = 1)</th></tr></thead>
+  <tbody>
+    <tr><td><strong>South</strong> (16)</td><td class="n">7°, 19°</td><td class="n">0.94</td><td class="n">0.80</td><td class="n">89%</td><td class="n">1.22, 0.82</td></tr>
+    <tr><td><strong>West</strong> (13)</td><td class="n">14°, 46°</td><td class="n">0.71</td><td class="n">0.77</td><td class="n">37%</td><td class="n">0.97, 1.03</td></tr>
+    <tr><td><strong>Northeast</strong> (9)</td><td class="n">19°, 63°</td><td class="n">0.55</td><td class="n">0.71</td><td class="n">20%</td><td class="n">1.03, 0.64</td></tr>
+    <tr><td><strong>Midwest</strong> (12)</td><td class="n">14°, 69°</td><td class="n">0.54</td><td class="n">0.75</td><td class="n">13%</td><td class="n">0.25, 0.19</td></tr>
+  </tbody>
+</table>
+</div>
+
+<p><strong>The South is the most nationally typical region.</strong> It holds the bottom of the affluence scale (the five lowest states are all Southern) and Maryland near the top, so its spread along that direction is 1.2 times the nation's. It also spans the age direction, from young Texas, Georgia and Oklahoma to old West Virginia, Delaware and Florida. Its top two directions are the national ones, at 7° and 19°. Two checks:</p>
+<ul>
+  <li><strong>Containment.</strong> The South is part of "All states", which pulls the two together. Compared with the other 34 states instead, the South still scores 0.73.</li>
+  <li><strong>Size.</strong> The South sits at the 89th percentile of random 16-state groups. That is high, but about one random group in nine does as well, so "typical" is the right word, not "exceptional".</li>
+</ul>
+
+<p><strong>The Midwest is distinct, but not in its directions.</strong> Its overlap with the nation is low, but at the 13th percentile it is not unusual for 12 states. What is unusual is how little it varies along the national directions: a quarter of the nation's spread on affluence and a fifth on age. None of 2,000 random 12-state groups is that compressed on both. Midwestern states are alike in wealth and age, so what is left to vary is size, Ohio and Illinois against the Dakotas, and that becomes the Midwest's top direction.</p>
+<p>This is a limit of the overlap score. It measures which directions a group varies along, not how much. A group can have nearly the national directions with much less variance along them. Checking the spread, or the singular values, catches what the angles miss.</p>
+
+<p><strong>The Northeast's third direction is its own.</strong> At <span class="m">r = 2</span> it is unremarkable (20th percentile). At <span class="m">r = 3</span> its third angle is 83° and its overlap falls to the 2nd percentile. Its top direction is urban against rural, New Jersey and Massachusetts against Maine and Vermont, with the rural states older.</p>
+<p><strong>The West is unremarkable.</strong> Its top direction ties age to wealth (older states like New Mexico and Montana are poorer and smaller than Utah, California and Colorado), which the nation's directions do not. But it sits at the 37th percentile, so this data cannot tell that pattern from chance.</p>
+
+<p><strong>Two lessons for comparing groups this way.</strong> First, judge each group against random groups of the same size, not just against the floor: the floor ignores how noisy a small group's components are. Second, look at variance as well as angles: two groups can share directions and still differ a lot in how much they vary along them.</p>
+
+<h2>Where this came from</h2>
+<p>This page was written to explain how to compare low-rank adapters trained on different domains. Each adapter's update writes into a subspace, and the same tools apply: principal angles, a random floor and a split-half ceiling. With adapters, <span class="m">n</span> is in the thousands and <span class="m">r</span> is 4 to 8, so the floor <span class="m">r/n</span> is close to zero, and the ceiling from a second training seed matters more than the floor.</p>
+</div>
+<script src="js/subspace.js"></script>
+<script src="js/states.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
