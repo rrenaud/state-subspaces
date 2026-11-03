@@ -62,5 +62,5 @@ test("the write-up's headline numbers still hold", () => {
   const top = v => v.map((x, i) => [Math.abs(x), STATES.feats[i]]).sort((a, b) => b[0] - a[0]).slice(0, 3).map(t => t[1]);
   assert.deepEqual(top(nat[0]).sort(), ["Bachelor's", "Income", "Urban"]);
   close(S.compare(nat, S.pca(Z("S"), 2).U).F, 0.94, 0.01);
-  close(S.compare(S.pca(Z("all"), 1).U, S.pca(Z("M"), 1).U).F, 0.14, 0.01);
+  close(S.compare(S.pca(Z("all"), 1).U, S.pca(Z("M"), 1).U).F, 0.17, 0.01);
 });

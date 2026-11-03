@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Literata:ital,opsz,wght@0,7..72,400;0,7..72,600;1,7..72,400&family=Schibsted+Grotesk:wght@500;700&family=JetBrains+Mono:wght@400;600&display=swap">
-<link rel="stylesheet" href="style.css?v=17">
+<link rel="stylesheet" href="style.css?v=18">
 </head>
 <body>
 <div class="wrap">
@@ -50,7 +50,7 @@
     <div class="cell" id="scorebox"></div>
   </div>
 </section>
-<p class="fine">The figures are approximate, roughly 2022 Census and ACS values typed from memory for illustration. Don't cite them.</p>
+<p class="fine">Data: 2022 American Community Survey 1-year estimates, 2020 Census urban share, 2022 Census Gazetteer land area. <code>scripts/fetch_census.py</code> downloads them from the Census Bureau and writes <code>data/census.csv</code>.</p>
 
 <h2>How to read the tool</h2>
 <p>Each state is a point in 8 dimensions: population and density on a log scale, median household income, median age, share with a bachelor's degree, share urban, share 65 and older, and poverty rate, each z-scored across all 50 states. Each Census region is a group, and its subspace is spanned by its top <span class="m">r</span> principal components.</p>
@@ -91,9 +91,9 @@ overlap = ‖U₁ᵀU₂‖²_F / r = (1² + 0.707²) / 2 = 0.75      (same with
 <table>
   <thead><tr><th>Direction</th><th>Largest weights</th><th>Variance</th><th>Low end</th><th>High end</th></tr></thead>
   <tbody>
-    <tr><td><strong>1. Affluence</strong></td><td class="m">0.51 Income + 0.48 Bachelor's + 0.43 Urban − 0.39 Poverty</td><td class="n">41%</td><td>West Virginia, Mississippi, Arkansas</td><td>New Jersey, Massachusetts, Maryland</td></tr>
-    <tr><td><strong>2. Age</strong></td><td class="m">0.67 Median age + 0.63 Age 65+ + 0.27 log Density</td><td class="n">27%</td><td>Utah, Alaska, Texas</td><td>Maine, Vermont, New Hampshire</td></tr>
-    <tr><td><strong>3. Size</strong></td><td class="m">0.62 log Pop + 0.48 log Density + 0.47 Poverty − 0.25 Income</td><td class="n">21%</td><td>Alaska, North Dakota, Wyoming</td><td>Florida, Louisiana, Texas</td></tr>
+    <tr><td><strong>1. Affluence</strong></td><td class="m">0.50 Income + 0.48 Bachelor's + 0.43 Urban − 0.41 Poverty</td><td class="n">41%</td><td>West Virginia, Mississippi, Arkansas</td><td>New Jersey, Massachusetts, Maryland</td></tr>
+    <tr><td><strong>2. Age</strong></td><td class="m">0.65 Median age + 0.63 Age 65+ + 0.22 log Density − 0.20 Urban</td><td class="n">27%</td><td>Utah, Texas, Alaska</td><td>Maine, Vermont, New Hampshire</td></tr>
+    <tr><td><strong>3. Size</strong></td><td class="m">0.61 log Pop + 0.51 log Density + 0.43 Poverty − 0.26 Income</td><td class="n">20%</td><td>Alaska, North Dakota, Wyoming</td><td>Florida, New York, Louisiana</td></tr>
   </tbody>
 </table>
 </div>
@@ -103,33 +103,33 @@ overlap = ‖U₁ᵀU₂‖²_F / r = (1² + 0.707²) / 2 = 0.75      (same with
 <table>
   <thead><tr><th>Region</th><th>θ₁, θ₂</th><th>Overlap</th><th>Random groups, same size: median</th><th>Percentile</th><th>Spread on affluence, age (nation = 1)</th></tr></thead>
   <tbody>
-    <tr><td><strong>South</strong> (16)</td><td class="n">7°, 19°</td><td class="n">0.94</td><td class="n">0.80</td><td class="n">89%</td><td class="n">1.22, 0.82</td></tr>
-    <tr><td><strong>West</strong> (13)</td><td class="n">14°, 46°</td><td class="n">0.71</td><td class="n">0.77</td><td class="n">37%</td><td class="n">0.97, 1.03</td></tr>
-    <tr><td><strong>Northeast</strong> (9)</td><td class="n">19°, 63°</td><td class="n">0.55</td><td class="n">0.71</td><td class="n">20%</td><td class="n">1.03, 0.64</td></tr>
-    <tr><td><strong>Midwest</strong> (12)</td><td class="n">14°, 69°</td><td class="n">0.54</td><td class="n">0.75</td><td class="n">13%</td><td class="n">0.25, 0.19</td></tr>
+    <tr><td><strong>South</strong> (16)</td><td class="n">9°, 17°</td><td class="n">0.94</td><td class="n">0.82</td><td class="n">89%</td><td class="n">1.28, 0.87</td></tr>
+    <tr><td><strong>West</strong> (13)</td><td class="n">12°, 48°</td><td class="n">0.70</td><td class="n">0.79</td><td class="n">34%</td><td class="n">0.96, 1.00</td></tr>
+    <tr><td><strong>Northeast</strong> (9)</td><td class="n">21°, 56°</td><td class="n">0.59</td><td class="n">0.72</td><td class="n">27%</td><td class="n">0.92, 0.85</td></tr>
+    <tr><td><strong>Midwest</strong> (12)</td><td class="n">13°, 75°</td><td class="n">0.51</td><td class="n">0.77</td><td class="n">8%</td><td class="n">0.23, 0.14</td></tr>
   </tbody>
 </table>
 </div>
 
-<p><strong>The South is the most nationally typical region.</strong> It holds the bottom of the affluence scale (the five lowest states are all Southern) and Maryland near the top, so its spread along that direction is 1.2 times the nation's. It also spans the age direction, from young Texas, Georgia and Oklahoma to old West Virginia, Delaware and Florida. Its top two directions are the national ones, at 7° and 19°. Two checks:</p>
+<p><strong>The South is the most nationally typical region.</strong> It holds the bottom of the affluence scale (four of the five lowest states are Southern, New Mexico the exception) and Maryland near the top, so its spread along that direction is 1.3 times the nation's. It also spans the age direction, from young Texas, Georgia and Oklahoma to old Delaware, West Virginia and Florida. Its top two directions are the national ones, at 9° and 17°. Two checks:</p>
 <ul>
-  <li><strong>Containment.</strong> The South is part of "All states", which pulls the two together. Compared with the other 34 states instead, the South still scores 0.73.</li>
+  <li><strong>Containment.</strong> The South is part of "All states", which pulls the two together. Compared with the other 34 states instead, the South still scores 0.71.</li>
   <li><strong>Size.</strong> The South sits at the 89th percentile of random 16-state groups. That is high, but about one random group in nine does as well, so "typical" is the right word, not "exceptional".</li>
 </ul>
 
-<p><strong>The Midwest is distinct, but not in its directions.</strong> Its overlap with the nation is low, but at the 13th percentile it is not unusual for 12 states. What is unusual is how little it varies along the national directions: a quarter of the nation's spread on affluence and a fifth on age. None of 2,000 random 12-state groups is that compressed on both. Midwestern states are alike in wealth and age, so what is left to vary is size, Ohio and Illinois against the Dakotas, and that becomes the Midwest's top direction.</p>
+<p><strong>The Midwest is distinct, but not in its directions.</strong> Its overlap with the nation is low, but at the 8th percentile it is only borderline unusual for 12 states. What is unusual is how little it varies along the national directions: about a quarter of the nation's spread on affluence and a seventh on age. None of 2,000 random 12-state groups is that compressed on both. Midwestern states are alike in wealth and age, so what is left to vary is size, Ohio and Illinois against the Dakotas, and that becomes the Midwest's top direction.</p>
 <p>This is a limit of the overlap score. It measures which directions a group varies along, not how much. A group can have nearly the national directions with much less variance along them. Checking the spread, or the singular values, catches what the angles miss.</p>
 
-<p><strong>The Northeast's third direction is its own.</strong> At <span class="m">r = 2</span> it is unremarkable (20th percentile). At <span class="m">r = 3</span> its third angle is 83° and its overlap falls to the 2nd percentile. Its top direction is urban against rural, New Jersey and Massachusetts against Maine and Vermont, with the rural states older.</p>
-<p><strong>The West is unremarkable.</strong> Its top direction ties age to wealth (older states like New Mexico and Montana are poorer and smaller than Utah, California and Colorado), which the nation's directions do not. But it sits at the 37th percentile, so this data cannot tell that pattern from chance.</p>
+<p><strong>The Northeast's third direction is its own.</strong> At <span class="m">r = 2</span> it is unremarkable (27th percentile). At <span class="m">r = 3</span> its third angle is 84° and its overlap falls to the 2nd percentile. Its top direction is urban against rural, New Jersey and Massachusetts against Maine and Vermont, with the rural states older.</p>
+<p><strong>The West is unremarkable.</strong> Its top direction ties age to wealth (older states like Montana and New Mexico are poorer and smaller than Utah, California and Colorado), which the nation's directions do not. But it sits at the 34th percentile, so this data cannot tell that pattern from chance.</p>
 
 <p><strong>Two lessons for comparing groups this way.</strong> First, judge each group against random groups of the same size, not just against the floor: the floor ignores how noisy a small group's components are. Second, look at variance as well as angles: two groups can share directions and still differ a lot in how much they vary along them.</p>
 
 <h2>Where this came from</h2>
 <p>This page was written to explain how to compare low-rank adapters trained on different domains. Each adapter's update writes into a subspace, and the same tools apply: principal angles, a random floor and a split-half ceiling. With adapters, <span class="m">n</span> is in the thousands and <span class="m">r</span> is 4 to 8, so the floor <span class="m">r/n</span> is close to zero, and the ceiling from a second training seed matters more than the floor.</p>
 </div>
-<script src="js/subspace.js?v=17"></script>
-<script src="js/states.js?v=17"></script>
-<script src="js/app.js?v=17"></script>
+<script src="js/subspace.js?v=18"></script>
+<script src="js/states.js?v=18"></script>
+<script src="js/app.js?v=18"></script>
 </body>
 </html>

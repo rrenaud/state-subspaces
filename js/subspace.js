@@ -41,10 +41,10 @@
     return { vals: idx.map(i => a[i][i]), vecs: idx.map(i => V.map(r => r[i])) };
   }
 
+  // A component's sign is arbitrary; pick the one whose weights sum to a positive number, so that similar directions
+  // in different groups point the same way (a weight that is largest by a hair can't flip it).
   function signFix(v) {
-    let k = 0;
-    v.forEach((x, i) => { if (Math.abs(x) > Math.abs(v[k])) k = i; });
-    return v[k] < 0 ? -1 : 1;
+    return v.reduce((t, x) => t + x, 0) < 0 ? -1 : 1;
   }
 
   function pca(Z, r) {
