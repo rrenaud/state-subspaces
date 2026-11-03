@@ -17,7 +17,7 @@ The state figures are approximate, typed from memory for illustration. Don't cit
 
 ## Run
 
-Open `index.html` in a browser. There is no build step and no dependencies; the page loads fonts from Google Fonts.
+Live at https://rrenaud.github.io/state-subspaces/, or open `index.html` in a browser. There is no build step and no dependencies; the page loads fonts from Google Fonts.
 
 ```sh
 node --test test/*.test.js   # math checks and the write-up's headline numbers
@@ -39,5 +39,5 @@ Both `js/subspace.js` and `js/states.js` work as browser globals (`Subspace`, `S
 
 ## Origin
 
-The page started as part of an explainer on comparing LoRA adapters trained on different domains. That work is in
-`~/rlcr-exact/multidomain-lora-circuits`. An adapter's update writes into a subspace, so the same comparison applies.
+The page started as part of an explainer on comparing LoRA adapters trained on different domains. An adapter's update
+writes into a subspace, so the same comparison applies.

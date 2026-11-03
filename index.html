@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Literata:ital,opsz,wght@0,7..72,400;0,7..72,600;1,7..72,400&family=Schibsted+Grotesk:wght@500;700&family=JetBrains+Mono:wght@400;600&display=swap">
-<link rel="stylesheet" href="style.css?v=14">
+<link rel="stylesheet" href="style.css?v=15">
 </head>
 <body>
 <div class="wrap">
@@ -66,7 +66,7 @@
   <li>Inside each subspace, restrict to directions orthogonal to the pair you just found, and repeat. That gives <span class="m">θ₂</span>, then <span class="m">θ₃</span>, up to <span class="m">θ_r</span>.</li>
 </ol>
 <p>If <span class="m">θ₁ = 0°</span>, the two subspaces share one direction exactly. If every angle is 0°, they are the same subspace. If every angle is 90°, each direction in one is orthogonal to each direction in the other.</p>
-<p><strong>How to compute them.</strong> Put orthonormal bases of the two subspaces in the columns of <span class="m">U₁</span> and <span class="m">U₂</span>. The small <span class="m">r×r</span> matrix <span class="m">U₁ᵀU₂</span> holds every dot product between a basis vector of <span class="m">S₁</span> and one of <span class="m">S₂</span>. Its entries depend on the bases chosen. Its singular values do not. The SVD <span class="m">U₁ᵀU₂ = P · diag(cos θᵢ) · Qᵀ</span> finds the rotation of each basis (<span class="m">U₁P</span> and <span class="m">U₂Q</span>) that matches the vectors up one to one, and the singular values are the cosines of the principal angles.</p>
+<p><strong>How to compute them.</strong> Put orthonormal bases of the two subspaces in the columns of <span class="m">U₁</span> and <span class="m">U₂</span>. The small <span class="m">r×r</span> matrix <span class="m">U₁ᵀU₂</span> holds every dot product between a basis vector of <span class="m">S₁</span> and one of <span class="m">S₂</span>. Its entries depend on the bases chosen. Its singular values do not. The SVD <span class="m">U₁ᵀU₂ = P · diag(cos θᵢ) · Qᵀ</span> finds the rotation of each basis (<span class="m">U₁P</span> and <span class="m">U₂Q</span>) that matches the vectors up one to one, and the singular values are the cosines of the principal angles. The greedy steps above are not an approximation: they find exactly the pairs the SVD finds all at once, and for every <span class="m">k</span>, the first <span class="m">k</span> pairs have the largest total cosine that any <span class="m">k</span> orthonormal pairs from the two subspaces can reach.</p>
 <p>A worked example in three dimensions, with <span class="m">r = 2</span>:</p>
 <div class="eq">S₁ = span{ x, y }                    the floor plane
 S₂ = span{ x, (y+z)/√2 }             the floor plane tilted 45° about the x axis
@@ -127,8 +127,8 @@ overlap = ‖U₁ᵀU₂‖²_F / r = (1² + 0.707²) / 2 = 0.75      (same with
 <h2>Where this came from</h2>
 <p>This page was written to explain how to compare low-rank adapters trained on different domains. Each adapter's update writes into a subspace, and the same tools apply: principal angles, a random floor and a split-half ceiling. With adapters, <span class="m">n</span> is in the thousands and <span class="m">r</span> is 4 to 8, so the floor <span class="m">r/n</span> is close to zero, and the ceiling from a second training seed matters more than the floor.</p>
 </div>
-<script src="js/subspace.js?v=14"></script>
-<script src="js/states.js?v=14"></script>
-<script src="js/app.js?v=14"></script>
+<script src="js/subspace.js?v=15"></script>
+<script src="js/states.js?v=15"></script>
+<script src="js/app.js?v=15"></script>
 </body>
 </html>
