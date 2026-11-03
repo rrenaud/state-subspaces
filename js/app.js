@@ -60,6 +60,9 @@
     return Object.keys(SHAPE).map(g => '<span><svg viewBox="0 0 12 12" width="12" height="12" aria-hidden="true">' + marker(g, 6, 6, 4.2) + "</svg>" + esc(ds.groups[g]) + "</span>").join("");
   }
 
+  // Plots are drawn at the panel's pixel width (one viewBox unit per CSS pixel), so a wider window gives a bigger
+  // plot area while text and markers keep their size.
+  const plotW = () => Math.max(280, Math.round(($("b1") && $("b1").clientWidth) || 300));
   // All 50 states projected onto a basis. Two or more dimensions: a scatter of the chosen pair of basis vectors,
   // equal scale on both axes. One dimension: one lane per region, so the marks spread out instead of piling up.
   // The group's states are full size and labeled; the rest are small and faded.
@@ -68,7 +71,7 @@
     const tip = (p, coords) => p.it.name + " (" + ds.groups[p.it.g] + ") · " + coords;
     let g, hits = "";
     if (U.length === 1) {
-      const lanes = Object.keys(SHAPE), laneH = 46, top = 4, left = 74, pad = 12, W = 300;
+      const lanes = Object.keys(SHAPE), laneH = 60, top = 6, left = 88, pad = 12, W = plotW();
       const H = top + lanes.length * laneH + 18;
       const pts = ds.items.map(it => ({ it, x: dot(it.z, U[0]), m: inG.has(it) }));
       const ext = Math.max(...pts.map(p => Math.abs(p.x))) * 1.06 || 1;
@@ -80,18 +83,18 @@
       lanes.forEach((r, li) => {
         const y = top + li * laneH + laneH / 2;
         g += '<line class="lane" x1="' + left + '" x2="' + (W - pad) + '" y1="' + y + '" y2="' + y + '"/>' +
-          '<text class="al" x="0" y="' + (y + 3.5) + '">' + esc(ds.groups[r]) + "</text>";
+          '<text class="al" x="0" y="' + (y + 4.5) + '">' + esc(ds.groups[r]) + "</text>";
         const lp = pts.filter(p => p.it.g === r);
-        lp.filter(p => !p.m).forEach(p => (g += marker(r, X(p.x), y, 2.6, " dim", p.it.i)));
+        lp.filter(p => !p.m).forEach(p => (g += marker(r, X(p.x), y, 3.2, " dim", p.it.i)));
         // Greedy label rows: each label takes the first row (just above, just below, then further out) whose
         // previous label is at least a label's width to the left, or else the row that has been free longest.
-        const rows = [-7, 13, -16, 22], last = rows.map(() => -Infinity);
+        const rows = [-9, 17, -21, 29], last = rows.map(() => -Infinity);
         lp.filter(p => p.m).sort((a, b) => a.x - b.x).forEach(p => {
           const x = X(p.x);
-          let ri = rows.findIndex((_, i) => x - last[i] >= 12);
+          let ri = rows.findIndex((_, i) => x - last[i] >= 15);
           if (ri < 0) ri = last.indexOf(Math.min(...last));
           last[ri] = x;
-          g += marker(r, x, y, 4, "", p.it.i) +
+          g += marker(r, x, y, 5, "", p.it.i) +
             '<text class="lb" text-anchor="middle" x="' + x.toFixed(1) + '" y="' + (y + rows[ri]).toFixed(1) + '">' + ds.postal[p.it.name] + "</text>";
         });
         lp.forEach(p => (hits += '<circle class="hit" data-i="' + p.it.i + '" cx="' + X(p.x).toFixed(1) + '" cy="' + y + '" r="6" data-t="' + esc(tip(p, sym + SUB[0] + " " + f2(p.x))) + '"/>'));
@@ -100,10 +103,11 @@
     }
     const [a, b] = U.length > 2 ? st.pair : [0, 1];
     // Axis names sit in margins outside the data: u_b's high end above, its low end and then u_a's two ends below.
-    const W = 300, H = 260, pad = 16, mt = 14, mb = 30, Ht = mt + H + mb;
+    const W = plotW(), H = Math.round(Math.min(W * 0.87, Math.max(260, innerHeight * 0.62))), pad = 16, mt = 14, mb = 30, Ht = mt + H + mb;
     const pts = ds.items.map(it => ({ it, x: dot(it.z, U[a]), y: dot(it.z, U[b]), m: inG.has(it) }));
-    const ext = Math.max(...pts.map(p => Math.max(Math.abs(p.x), Math.abs(p.y)))) * 1.08 || 1;
-    const k = (H - 2 * pad) / (2 * ext);
+    // Equal scale on both axes, as large as fits the panel in both directions.
+    const ex = Math.max(...pts.map(p => Math.abs(p.x))) * 1.08 || 1, ey = Math.max(...pts.map(p => Math.abs(p.y))) * 1.08 || 1;
+    const k = Math.min((W - 2 * pad) / (2 * ex), (H - 2 * pad) / (2 * ey));
     const X = x => W / 2 + x * k, Y = y => mt + H / 2 - y * k;
     const na = nameEnds(U[a]), nb = nameEnds(U[b]);
     g = '<svg class="sc" viewBox="0 0 ' + W + " " + Ht + '" role="img" aria-label="States projected onto this basis">' +
@@ -113,10 +117,10 @@
       '<text class="al nm" x="' + W / 2 + '" y="' + (mt + H + 9) + '" text-anchor="middle">↓ ' + tag(sym, b, nb.lo) + "</text>" +
       '<text class="al nm" x="' + pad + '" y="' + (Ht - 3) + '">← ' + tag(sym, a, na.lo) + "</text>" +
       '<text class="al nm" x="' + (W - pad) + '" y="' + (Ht - 3) + '" text-anchor="end">' + tag(sym, a, na.hi) + " →</text>";
-    pts.filter(p => !p.m).forEach(p => (g += marker(p.it.g, X(p.x), Y(p.y), 2.6, " dim", p.it.i)));
+    pts.filter(p => !p.m).forEach(p => (g += marker(p.it.g, X(p.x), Y(p.y), 3.2, " dim", p.it.i)));
     pts.filter(p => p.m).forEach(p => {
-      g += marker(p.it.g, X(p.x), Y(p.y), 4.2, "", p.it.i) +
-        '<text class="lb" x="' + (X(p.x) + 6).toFixed(1) + '" y="' + (Y(p.y) + 3).toFixed(1) + '">' + ds.postal[p.it.name] + "</text>";
+      g += marker(p.it.g, X(p.x), Y(p.y), 5.2, "", p.it.i) +
+        '<text class="lb" x="' + (X(p.x) + 8).toFixed(1) + '" y="' + (Y(p.y) + 4).toFixed(1) + '">' + ds.postal[p.it.name] + "</text>";
     });
     pts.forEach(p => (hits += '<circle class="hit" data-i="' + p.it.i + '" cx="' + X(p.x).toFixed(1) + '" cy="' + Y(p.y).toFixed(1) + '" r="8" data-t="' +
       esc(tip(p, sym + SUB[a] + " " + f2(p.x) + " · " + sym + SUB[b] + " " + f2(p.y))) + '"/>'));
@@ -352,6 +356,11 @@
       tip.style.top = (e.clientY - b.top + 14) + "px";
     });
     lab.addEventListener("pointerleave", () => { tip.hidden = true; clearState(); });
+    let drawnW = 0, resizeT = 0;
+    new ResizeObserver(() => {
+      clearTimeout(resizeT);
+      resizeT = setTimeout(() => { if (Math.abs(plotW() - drawnW) > 4) { drawnW = plotW(); render(); } }, 120);
+    }).observe($("b1"));
     $("rot").onclick = () => { st.rotSeed++; st.rot = randomRotation(st.r, st.rotSeed); render(); };
     $("unrot").onclick = () => { st.rot = null; render(); };
     document.querySelectorAll("#pairseg button").forEach(b => (b.onclick = () => { st.pair = b.dataset.pair.split(",").map(Number); render(); }));
