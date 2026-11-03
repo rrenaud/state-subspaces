@@ -20,6 +20,22 @@
     const more = order.slice(top.length).some(([x]) => Math.abs(x) >= 0.15);
     return top.map(([x, i], k) => (k ? (x > 0 ? " + " : " − ") : (x > 0 ? "" : "−")) + Math.abs(x).toFixed(2) + " " + feats[i]).join("") + (more ? " + …" : "");
   }
+  // An approximate name for each end of a direction, from what its large weights mean for a state:
+  // "affluent, educated" at the high end and the opposites at the low end. Median age and 65+ both read as "older",
+  // Income and −Poverty both as "affluent", so their weights pool.
+  const WORDS = [["populous", "small"], ["dense", "sparse"], ["affluent", "poorer"], ["older", "younger"],
+    ["educated", "less educated"], ["urban", "rural"], ["older", "younger"], ["poorer", "affluent"]];
+  function nameEnds(v) {
+    const score = new Map();
+    v.forEach((w, j) => {
+      const [hi, lo] = WORDS[j], key = w >= 0 ? hi : lo;
+      const e = score.get(key) || { w: 0, lo: w >= 0 ? lo : hi };
+      e.w += Math.abs(w); score.set(key, e);
+    });
+    const top = [...score].sort((p, q) => q[1].w - p[1].w).filter(([, e], k, a) => k < 2 && e.w >= 0.25 && e.w >= 0.6 * a[0][1].w);
+    if (!top.length) return { hi: "mixed", lo: "mixed" };
+    return { hi: top.map(t => t[0]).join(", "), lo: top.map(t => t[1].lo).join(", ") };
+  }
   // Rows whose weight matters are emphasized; near-zero rows fade.
   function rowCls(series, j) {
     const m = Math.max(...series.map(s => Math.abs(s.v[j])));
@@ -63,7 +79,8 @@
       const X = x => left + (x / ext + 1) / 2 * (W - left - pad);
       g = '<svg class="sc" viewBox="0 0 ' + W + " " + H + '" role="img" aria-label="States by region along ' + sym + SUB[0] + '">' +
         '<line class="ax" x1="' + X(0) + '" x2="' + X(0) + '" y1="' + top + '" y2="' + (top + lanes.length * laneH) + '"/>' +
-        '<text class="al" x="' + (W - pad) + '" y="' + (H - 4) + '" text-anchor="end">' + sym + SUB[0] + " →</text>";
+        '<text class="al nm" x="' + (W - pad) + '" y="' + (H - 4) + '" text-anchor="end">' + sym + SUB[0] + " " + esc(nameEnds(U[0]).hi) + " →</text>" +
+        '<text class="al nm" x="' + left + '" y="' + (H - 4) + '">← ' + esc(nameEnds(U[0]).lo) + "</text>";
       lanes.forEach((r, li) => {
         const y = top + li * laneH + laneH / 2;
         g += '<line class="lane" x1="' + left + '" x2="' + (W - pad) + '" y1="' + y + '" y2="' + y + '"/>' +
@@ -86,16 +103,22 @@
       return g + hits + "</svg>";
     }
     const [a, b] = U.length > 2 ? st.pair : [0, 1];
-    const W = 300, H = 260, pad = 16;
+    // Axis names sit in margins outside the data: u_b's high end above, its low end and then u_a's two ends below.
+    const W = 300, H = 260, pad = 16, mt = 14, mb = 30, Ht = mt + H + mb;
     const pts = ds.items.map(it => ({ it, x: dot(it.z, U[a]), y: dot(it.z, U[b]), m: inG.has(it) }));
     const ext = Math.max(...pts.map(p => Math.max(Math.abs(p.x), Math.abs(p.y)))) * 1.08 || 1;
     const k = (H - 2 * pad) / (2 * ext);
-    const X = x => W / 2 + x * k, Y = y => H / 2 - y * k;
-    g = '<svg class="sc" viewBox="0 0 ' + W + " " + H + '" role="img" aria-label="States projected onto this basis">' +
-      '<line class="ax" x1="' + pad + '" x2="' + (W - pad) + '" y1="' + H / 2 + '" y2="' + H / 2 + '"/>' +
-      '<text class="al" x="' + (W - pad) + '" y="' + (H / 2 - 5) + '" text-anchor="end">' + sym + SUB[a] + " →</text>" +
-      '<line class="ax" x1="' + W / 2 + '" x2="' + W / 2 + '" y1="' + pad + '" y2="' + (H - pad) + '"/>' +
-      '<text class="al" x="' + (W / 2 + 5) + '" y="' + (pad + 8) + '">' + sym + SUB[b] + " ↑</text>";
+    const X = x => W / 2 + x * k, Y = y => mt + H / 2 - y * k;
+    const na = nameEnds(U[a]), nb = nameEnds(U[b]);
+    g = '<svg class="sc" viewBox="0 0 ' + W + " " + Ht + '" role="img" aria-label="States projected onto this basis">' +
+      '<line class="ax" x1="' + pad + '" x2="' + (W - pad) + '" y1="' + (mt + H / 2) + '" y2="' + (mt + H / 2) + '"/>' +
+      '<line class="ax" x1="' + W / 2 + '" x2="' + W / 2 + '" y1="' + (mt + pad) + '" y2="' + (mt + H - pad) + '"/>' +
+      '<text class="al" x="' + (W - pad) + '" y="' + (mt + H / 2 - 5) + '" text-anchor="end">' + sym + SUB[a] + " →</text>" +
+      '<text class="al" x="' + (W / 2 + 5) + '" y="' + (mt + pad + 8) + '">' + sym + SUB[b] + " ↑</text>" +
+      '<text class="al nm" x="' + W / 2 + '" y="' + (mt - 3) + '" text-anchor="middle">↑ ' + esc(nb.hi) + "</text>" +
+      '<text class="al nm" x="' + W / 2 + '" y="' + (mt + H + 9) + '" text-anchor="middle">↓ ' + esc(nb.lo) + "</text>" +
+      '<text class="al nm" x="' + pad + '" y="' + (Ht - 3) + '">← ' + esc(na.lo) + "</text>" +
+      '<text class="al nm" x="' + (W - pad) + '" y="' + (Ht - 3) + '" text-anchor="end">' + esc(na.hi) + " →</text>";
     pts.filter(p => !p.m).forEach(p => (g += marker(p.it.g, X(p.x), Y(p.y), 2.6, " dim", p.it.i)));
     pts.filter(p => p.m).forEach(p => {
       g += marker(p.it.g, X(p.x), Y(p.y), 4.2, "", p.it.i) +
@@ -113,7 +136,8 @@
   // Basis panels (marks = true) also carry a z tick and a z × weight bar, drawn while a state is hovered.
   function bars(feats, series, marks) {
     const two = series.length === 2;
-    return '<div class="bars">' + feats.map((f, j) =>
+    return '<div class="bars">' + (marks ? '<div class="bh"><span>feature</span><span>z</span><span>− weight +</span>' +
+      '<span>weight</span></div>' : "") + feats.map((f, j) =>
       '<div class="br' + rowCls(series, j) + '"><span>' + esc(f) + '</span><span class="bz"></span><span class="bt">' +
       series.map((s, k) => '<i class="bar ' + s.cls + (two ? (k ? " bot" : " top") : "") + '" style="' + barStyle(s.v[j]) + '"></i>').join("") +
       (marks ? '<i class="zp ' + series[0].cls + '"></i><i class="zt"></i>' : "") +
@@ -147,7 +171,8 @@
         row.classList.toggle("hot", Math.abs(c) >= 0.3);
       });
       sumRow(el.querySelector(".srow"), it.z.map((z, j) => z * v[j]), sum);
-      el.querySelector(".vt span").textContent = "· " + it.name + ": z × weight sums to " + sgn(sum);
+      el.querySelector(".bh span:last-child").textContent = "z × w";
+      el.querySelector(".vt span").textContent = "· " + it.name + " " + sgn(sum);
     });
     document.querySelectorAll(".sc .hl").forEach(m => m.classList.remove("hl"));
     document.querySelectorAll('.sc .rg[data-i="' + i + '"]').forEach(m => m.classList.add("hl"));
@@ -162,7 +187,7 @@
       if (Math.abs(c) < 1e-9) return;
       const a = c > 0 ? pos : neg, b = a + c;
       if (c > 0) pos = b; else neg = b;
-      h += '<i class="seg ' + row.dataset.cls + '" style="left:' + Math.min(x(a), x(b)) + "%;width:" + Math.abs(x(b) - x(a)) + '%"></i>';
+      h += '<i class="sseg ' + row.dataset.cls + '" style="left:' + Math.min(x(a), x(b)) + "%;width:" + Math.abs(x(b) - x(a)) + '%"></i>';
     });
     row.querySelector(".bt").innerHTML = h + '<i class="zt" style="left:' + x(sum) + '%"></i>';
     row.querySelector(".bv").textContent = sgn(sum);
@@ -191,6 +216,7 @@
       row.querySelector(".bt").innerHTML = "";
       row.querySelector(".bv").textContent = "";
     });
+    document.querySelectorAll("#b1 .bh span:last-child, #b2 .bh span:last-child").forEach(sp => (sp.textContent = "weight"));
     document.querySelectorAll("#b1 .vt span, #b2 .vt span").forEach(sp => (sp.textContent = sp.dataset.meta));
     document.querySelectorAll(".sc .hl").forEach(m => m.classList.remove("hl"));
     $("lab").classList.remove("hovering");
@@ -215,15 +241,14 @@
       const cnt = items.length;
       const cls = which === 1 ? "s1" : "s2", sym = which === 1 ? "u" : "v";
       let h = '<h4><span class="sw ' + cls + '"></span>S' + SUB[which - 1] + " · " + esc(label) + " <small>" + cnt + " " + ds.noun + "</small></h4>" +
-        scatter(ds, items, U, sym) + '<p class="cap">All 50 states projected onto ' +
-        (U.length === 1 ? sym + SUB[0] + ", one lane per region. " : U.length > 2
-          ? sym + SUB[st.pair[0]] + " and " + sym + SUB[st.pair[1]] + " (pick the pair under Plot axes). " : "this basis. ") +
-        (items.length === ds.items.length ? "" : esc(label) + " full size and labeled. ") + "Hover a mark for the state: on each row the faded bar is the weight, the solid bar on the same scale is z × weight, and the black tick is the z-score on a ±3 scale. The Sum row stacks the products on its own scale, and its tick is the state's coordinate.</p>";
+        scatter(ds, items, U, sym);
       U.forEach((v, k) => {
         const meta = rotated ? "rotated basis vector" : Math.round(frac[k] * 100) + "% of the group's variance";
+        const nm = nameEnds(v);
         h += '<div class="vec" data-p="' + which + '" data-k="' + k + '"><div class="vt">' + sym + SUB[k] +
-          ' <span data-meta="· ' + esc(meta) + '">· ' + esc(meta) + '</span></div><div class="vd">' +
-          esc(describe(v, feats)) + "</div>" + ends(items, v) + bars(feats, [{ v, cls }], true) + sumScale(ds, v, cls) + "</div>";
+          ' <b class="vn">' + esc(nm.hi) + " ↔ " + esc(nm.lo) + '</b> <span data-meta="· ' + esc(meta) + '">· ' + esc(meta) + "</span></div>" +
+          bars(feats, [{ v, cls }], true) + sumScale(ds, v, cls) +
+          '<div class="vfoot"><div class="vd">' + esc(describe(v, feats)) + "</div>" + ends(items, v) + "</div></div>";
       });
       return h;
     };
