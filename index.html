@@ -8,47 +8,15 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Literata:ital,opsz,wght@0,7..72,400;0,7..72,600;1,7..72,400&family=Schibsted+Grotesk:wght@500;700&family=JetBrains+Mono:wght@400;600&display=swap">
-<link rel="stylesheet" href="style.css?v=12">
+<link rel="stylesheet" href="style.css?v=13">
 </head>
 <body>
 <div class="wrap">
 <header>
   <div class="eyebrow">state-subspaces · principal angles</div>
   <h1>State Subspaces</h1>
-  <p class="lede">How to tell whether two groups vary along the same directions, using principal angles between subspaces. The example is the 50 US states, grouped by Census region.</p>
+  <p class="lede">How to tell whether two groups vary along the same directions, using principal angles between subspaces. The example is the 50 US states, grouped by Census region. Pick two groups in the tool; how to read it, and what principal angles are, follow below it.</p>
 </header>
-
-<h2>Subspaces, not bases</h2>
-<p>Take a group of data points and its top <span class="m">r</span> principal components. Those components span a subspace: the directions along which the group varies most. Two groups can be compared by asking how much their subspaces overlap.</p>
-<p>A subspace has many bases. Rotate the basis vectors among themselves and they still span the same subspace. So a comparison should depend only on the subspaces, not on which basis vectors happened to come out of the computation. Comparing basis vectors one by one fails this test.</p>
-
-<h2>Principal angles</h2>
-<p><strong>Principal angles</strong> answer the question greedily:</p>
-<ol>
-  <li>Find the unit vector in <span class="m">S₁</span> and the unit vector in <span class="m">S₂</span> that have the smallest angle between them. That angle is <span class="m">θ₁</span>, and the two vectors are the first pair of <em>principal vectors</em>.</li>
-  <li>Inside each subspace, restrict to directions orthogonal to the pair you just found, and repeat. That gives <span class="m">θ₂</span>, then <span class="m">θ₃</span>, up to <span class="m">θ_r</span>.</li>
-</ol>
-<p>If <span class="m">θ₁ = 0°</span>, the two subspaces share one direction exactly. If every angle is 0°, they are the same subspace. If every angle is 90°, each direction in one is orthogonal to each direction in the other.</p>
-<p><strong>How to compute them.</strong> Put orthonormal bases of the two subspaces in the columns of <span class="m">U₁</span> and <span class="m">U₂</span>. The small <span class="m">r×r</span> matrix <span class="m">U₁ᵀU₂</span> holds every dot product between a basis vector of <span class="m">S₁</span> and one of <span class="m">S₂</span>. Its entries depend on the bases chosen. Its singular values do not. The SVD <span class="m">U₁ᵀU₂ = P · diag(cos θᵢ) · Qᵀ</span> finds the rotation of each basis (<span class="m">U₁P</span> and <span class="m">U₂Q</span>) that matches the vectors up one to one, and the singular values are the cosines of the principal angles.</p>
-<p>A worked example in three dimensions, with <span class="m">r = 2</span>:</p>
-<div class="eq">S₁ = span{ x, y }                    the floor plane
-S₂ = span{ x, (y+z)/√2 }             the floor plane tilted 45° about the x axis
-
-U₁ᵀU₂ = [ x·x   x·(y+z)/√2 ]  =  [ 1   0    ]     singular values 1, 0.707
-        [ y·x   y·(y+z)/√2 ]     [ 0   0.707 ]     θ₁ = 0° (both contain x), θ₂ = 45°
-
-Use a different basis for S₁: { (x+y)/√2, (x−y)/√2 }
-U₁ᵀU₂ = [ 0.707   0.5 ]    every entry changed,
-        [ 0.707  −0.5 ]    singular values still 1, 0.707
-
-overlap = ‖U₁ᵀU₂‖²_F / r = (1² + 0.707²) / 2 = 0.75      (same with either basis)</div>
-<p><strong>A one-number summary.</strong> The overlap score <span class="m">‖U₁ᵀU₂‖²_F / r = (cos²θ₁ + … + cos²θ_r) / r</span> is the average of the squared cosines. Pick a unit vector in <span class="m">S₂</span> at random and project it onto <span class="m">S₁</span>: the score is the squared length it keeps, on average. It is 1 when the subspaces coincide, 0 when they are orthogonal, and the same in either direction.</p>
-<p><strong>The floor.</strong> A random unit vector in <span class="m">ℝⁿ</span> keeps, on average, <span class="m">1/n</span> of its squared length along any one fixed direction, so <span class="m">r/n</span> when projected onto any <span class="m">r</span>-dimensional subspace. Two unrelated subspaces therefore score about <span class="m">r/n</span>. In the 8 dimensions of the state data, with <span class="m">r = 2</span>, that is 0.25, which is not small.</p>
-<p><strong>The ceiling.</strong> Even one group does not produce the same subspace twice: a different sample of its data moves it. Comparing two halves of one group's data estimates how high a score can realistically go. A score means something only relative to both the floor and this ceiling.</p>
-
-<h2>Try it on the 50 states</h2>
-<p>Each state is a point in 8 dimensions: population and density on a log scale, median household income, median age, share with a bachelor's degree, share urban, share 65 and older, and poverty rate, each z-scored across all 50 states. Each Census region is a group, and its subspace is spanned by its top <span class="m">r</span> principal components.</p>
-<p>Each basis vector is a unit-length weighted sum of the features, and its squared weights add up to 1. So a weight of 0.7 means about half of that direction (0.7² ≈ 0.49) is that one feature. Features with large weights are drawn bold, and those near zero are faded. The plots show all 50 states projected onto each basis, with each region in its own color and shape. Hover a state to see how it gets its coordinates: each row then shows the state's z-score for that feature, as a number and as a black tick on a ±3 scale, and z × weight, as a number and as a solid bar drawn over the faded weight bar on the same scale. So the solid bar is the weight bar stretched by the z-score: longer where the state is more than one standard deviation from average, shorter where it is close to average, and flipped where it is below average. A product past ±1 is cut off at the end of the track. Under the rows, the Sum row stacks the products on a scale of its own, fixed for each basis vector: positive products build rightward from zero, negative ones leftward, and the black tick is where they net out, which is the state's coordinate. The products add up to the state's coordinate along that basis vector. Try <em>Rotate</em>: the basis vectors, the plot and the matrix change, and the angles do not.</p>
 
 <section class="lab" id="lab" aria-label="Principal angles tool">
   <p class="dsnote" id="dsnote"></p>
@@ -82,6 +50,38 @@ overlap = ‖U₁ᵀU₂‖²_F / r = (1² + 0.707²) / 2 = 0.75      (same with
   </div>
 </section>
 <p class="fine">The figures are approximate, roughly 2022 Census and ACS values typed from memory for illustration. Don't cite them.</p>
+
+<h2>How to read the tool</h2>
+<p>Each state is a point in 8 dimensions: population and density on a log scale, median household income, median age, share with a bachelor's degree, share urban, share 65 and older, and poverty rate, each z-scored across all 50 states. Each Census region is a group, and its subspace is spanned by its top <span class="m">r</span> principal components.</p>
+<p>Each basis vector is a unit-length weighted sum of the features, and its squared weights add up to 1. So a weight of 0.7 means about half of that direction (0.7² ≈ 0.49) is that one feature. Features with large weights are drawn bold, and those near zero are faded. The plots show all 50 states projected onto each basis, with each region in its own color and shape. Hover a state to see how it gets its coordinates: each row then shows the state's z-score for that feature, as a number and as a black tick on a ±3 scale, and z × weight, as a number and as a solid bar drawn over the faded weight bar on the same scale. So the solid bar is the weight bar stretched by the z-score: longer where the state is more than one standard deviation from average, shorter where it is close to average, and flipped where it is below average. A product past ±1 is cut off at the end of the track. Under the rows, the Sum row stacks the products on a scale of its own, fixed for each basis vector: positive products build rightward from zero, negative ones leftward, and the black tick is where they net out, which is the state's coordinate. The products add up to the state's coordinate along that basis vector. Try <em>Rotate</em>: the basis vectors, the plot and the matrix change, and the angles do not.</p>
+
+<h2>Subspaces, not bases</h2>
+<p>Take a group of data points and its top <span class="m">r</span> principal components. Those components span a subspace: the directions along which the group varies most. Two groups can be compared by asking how much their subspaces overlap.</p>
+<p>A subspace has many bases. Rotate the basis vectors among themselves and they still span the same subspace. So a comparison should depend only on the subspaces, not on which basis vectors happened to come out of the computation. Comparing basis vectors one by one fails this test.</p>
+
+<h2>Principal angles</h2>
+<p><strong>Principal angles</strong> answer the question greedily:</p>
+<ol>
+  <li>Find the unit vector in <span class="m">S₁</span> and the unit vector in <span class="m">S₂</span> that have the smallest angle between them. That angle is <span class="m">θ₁</span>, and the two vectors are the first pair of <em>principal vectors</em>.</li>
+  <li>Inside each subspace, restrict to directions orthogonal to the pair you just found, and repeat. That gives <span class="m">θ₂</span>, then <span class="m">θ₃</span>, up to <span class="m">θ_r</span>.</li>
+</ol>
+<p>If <span class="m">θ₁ = 0°</span>, the two subspaces share one direction exactly. If every angle is 0°, they are the same subspace. If every angle is 90°, each direction in one is orthogonal to each direction in the other.</p>
+<p><strong>How to compute them.</strong> Put orthonormal bases of the two subspaces in the columns of <span class="m">U₁</span> and <span class="m">U₂</span>. The small <span class="m">r×r</span> matrix <span class="m">U₁ᵀU₂</span> holds every dot product between a basis vector of <span class="m">S₁</span> and one of <span class="m">S₂</span>. Its entries depend on the bases chosen. Its singular values do not. The SVD <span class="m">U₁ᵀU₂ = P · diag(cos θᵢ) · Qᵀ</span> finds the rotation of each basis (<span class="m">U₁P</span> and <span class="m">U₂Q</span>) that matches the vectors up one to one, and the singular values are the cosines of the principal angles.</p>
+<p>A worked example in three dimensions, with <span class="m">r = 2</span>:</p>
+<div class="eq">S₁ = span{ x, y }                    the floor plane
+S₂ = span{ x, (y+z)/√2 }             the floor plane tilted 45° about the x axis
+
+U₁ᵀU₂ = [ x·x   x·(y+z)/√2 ]  =  [ 1   0    ]     singular values 1, 0.707
+        [ y·x   y·(y+z)/√2 ]     [ 0   0.707 ]     θ₁ = 0° (both contain x), θ₂ = 45°
+
+Use a different basis for S₁: { (x+y)/√2, (x−y)/√2 }
+U₁ᵀU₂ = [ 0.707   0.5 ]    every entry changed,
+        [ 0.707  −0.5 ]    singular values still 1, 0.707
+
+overlap = ‖U₁ᵀU₂‖²_F / r = (1² + 0.707²) / 2 = 0.75      (same with either basis)</div>
+<p><strong>A one-number summary.</strong> The overlap score <span class="m">‖U₁ᵀU₂‖²_F / r = (cos²θ₁ + … + cos²θ_r) / r</span> is the average of the squared cosines. Pick a unit vector in <span class="m">S₂</span> at random and project it onto <span class="m">S₁</span>: the score is the squared length it keeps, on average. It is 1 when the subspaces coincide, 0 when they are orthogonal, and the same in either direction.</p>
+<p><strong>The floor.</strong> A random unit vector in <span class="m">ℝⁿ</span> keeps, on average, <span class="m">1/n</span> of its squared length along any one fixed direction, so <span class="m">r/n</span> when projected onto any <span class="m">r</span>-dimensional subspace. Two unrelated subspaces therefore score about <span class="m">r/n</span>. In the 8 dimensions of the state data, with <span class="m">r = 2</span>, that is 0.25, which is not small.</p>
+<p><strong>The ceiling.</strong> Even one group does not produce the same subspace twice: a different sample of its data moves it. Comparing two halves of one group's data estimates how high a score can realistically go. A score means something only relative to both the floor and this ceiling.</p>
 
 <h2>Reading the state subspaces</h2>
 <p>Every number below comes from <code>node scripts/report.js</code>.</p>
@@ -127,8 +127,8 @@ overlap = ‖U₁ᵀU₂‖²_F / r = (1² + 0.707²) / 2 = 0.75      (same with
 <h2>Where this came from</h2>
 <p>This page was written to explain how to compare low-rank adapters trained on different domains. Each adapter's update writes into a subspace, and the same tools apply: principal angles, a random floor and a split-half ceiling. With adapters, <span class="m">n</span> is in the thousands and <span class="m">r</span> is 4 to 8, so the floor <span class="m">r/n</span> is close to zero, and the ceiling from a second training seed matters more than the floor.</p>
 </div>
-<script src="js/subspace.js?v=12"></script>
-<script src="js/states.js?v=12"></script>
-<script src="js/app.js?v=12"></script>
+<script src="js/subspace.js?v=13"></script>
+<script src="js/states.js?v=13"></script>
+<script src="js/app.js?v=13"></script>
 </body>
 </html>
