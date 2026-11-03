@@ -24,6 +24,7 @@
   --accent: #2dd4bf; --frozen: #6f7888; --code-bg: #20252f; color-scheme: dark;
 }
 *, *::before, *::after { box-sizing: border-box; }
+[hidden] { display: none !important; }
 body { margin: 0; background: var(--bg); color: var(--fg); font-family: var(--body); font-size: 17px; line-height: 1.62; }
 .wrap { max-width: 46rem; margin: 0 auto; padding-block: 3rem 5rem;
   padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
