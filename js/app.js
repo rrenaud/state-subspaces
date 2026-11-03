@@ -6,7 +6,7 @@
   const ceilStats = (g, r) => Subspace.ceilStats(g, members(STATES, g).map(it => it.z), r);
   const SUB = ["₁", "₂", "₃"];
 
-  const st = { ds: "us", g1: "all", g2: "S", r: 2, rot: null, rotSeed: 1 };
+  const st = { ds: "us", g1: "all", g2: "S", r: 2, rot: null, rotSeed: 1, pair: [0, 1] };
   const $ = id => document.getElementById(id);
   const f2 = x => (Math.abs(x) < 0.005 ? "0.00" : x.toFixed(2)).replace("-", "−");
   const esc = s => s.replace(/&/g, "&amp;").replace(/</g, "&lt;");
@@ -47,33 +47,62 @@
     return Object.keys(SHAPE).map(g => '<span><svg viewBox="0 0 12 12" width="12" height="12" aria-hidden="true">' + marker(g, 6, 6, 4.2) + "</svg>" + esc(ds.groups[g]) + "</span>").join("");
   }
 
-  function scatter(ds, members, U, cls, sym) {
-    const W = 300, H = U.length > 1 ? 260 : 130, pad = 16;
+  // All 50 states projected onto a basis. Two or more dimensions: a scatter of the chosen pair of basis vectors,
+  // equal scale on both axes. One dimension: one lane per region, so the marks spread out instead of piling up.
+  // The group's states are full size and labeled; the rest are small and faded.
+  function scatter(ds, members, U, sym) {
     const inG = new Set(members);
-    const pts = ds.items.map(it => ({ it, x: dot(it.z, U[0]), y: U.length > 1 ? dot(it.z, U[1]) : 0, m: inG.has(it) }));
-    let ext = Math.max(...pts.map(p => Math.max(Math.abs(p.x), Math.abs(p.y)))) * 1.08 || 1;
-    if (U.length === 1) {  // one dimension: stagger the group's states into rows so labels don't stack
-      pts.filter(p => p.m).sort((a, b) => a.x - b.x).forEach((p, i) => (p.y = [0.5, -0.5, 0.17, -0.83][i % 4] * ext * (H - 2 * pad) / (W - 2 * pad)));
+    const tip = (p, coords) => p.it.name + " (" + ds.groups[p.it.g] + ") · " + coords;
+    let g, hits = "";
+    if (U.length === 1) {
+      const lanes = Object.keys(SHAPE), laneH = 46, top = 4, left = 74, pad = 12, W = 300;
+      const H = top + lanes.length * laneH + 18;
+      const pts = ds.items.map(it => ({ it, x: dot(it.z, U[0]), m: inG.has(it) }));
+      const ext = Math.max(...pts.map(p => Math.abs(p.x))) * 1.06 || 1;
+      const X = x => left + (x / ext + 1) / 2 * (W - left - pad);
+      g = '<svg class="sc" viewBox="0 0 ' + W + " " + H + '" role="img" aria-label="States by region along ' + sym + SUB[0] + '">' +
+        '<line class="ax" x1="' + X(0) + '" x2="' + X(0) + '" y1="' + top + '" y2="' + (top + lanes.length * laneH) + '"/>' +
+        '<text class="al" x="' + (W - pad) + '" y="' + (H - 4) + '" text-anchor="end">' + sym + SUB[0] + " →</text>";
+      lanes.forEach((r, li) => {
+        const y = top + li * laneH + laneH / 2;
+        g += '<line class="lane" x1="' + left + '" x2="' + (W - pad) + '" y1="' + y + '" y2="' + y + '"/>' +
+          '<text class="al" x="0" y="' + (y + 3.5) + '">' + esc(ds.groups[r]) + "</text>";
+        const lp = pts.filter(p => p.it.g === r);
+        lp.filter(p => !p.m).forEach(p => (g += marker(r, X(p.x), y, 2.6, " dim")));
+        // Greedy label rows: each label takes the first row (just above, just below, then further out) whose
+        // previous label is at least a label's width to the left, or else the row that has been free longest.
+        const rows = [-7, 13, -16, 22], last = rows.map(() => -Infinity);
+        lp.filter(p => p.m).sort((a, b) => a.x - b.x).forEach(p => {
+          const x = X(p.x);
+          let ri = rows.findIndex((_, i) => x - last[i] >= 12);
+          if (ri < 0) ri = last.indexOf(Math.min(...last));
+          last[ri] = x;
+          g += marker(r, x, y, 4) +
+            '<text class="lb" text-anchor="middle" x="' + x.toFixed(1) + '" y="' + (y + rows[ri]).toFixed(1) + '">' + ds.postal[p.it.name] + "</text>";
+        });
+        lp.forEach(p => (hits += '<circle class="hit" cx="' + X(p.x).toFixed(1) + '" cy="' + y + '" r="6" data-t="' + esc(tip(p, sym + SUB[0] + " " + f2(p.x))) + '"/>'));
+      });
+      return g + hits + "</svg>";
     }
-    const k = Math.min(W - 2 * pad, H - 2 * pad) / (2 * ext);
-    const k1 = U.length > 1 ? k : (W - 2 * pad) / (2 * ext);
-    const X = x => W / 2 + x * k1, Y = y => H / 2 - y * k1;
-    let g = '<svg class="sc" viewBox="0 0 ' + W + " " + H + '" role="img" aria-label="States projected onto this basis">' +
+    const [a, b] = U.length > 2 ? st.pair : [0, 1];
+    const W = 300, H = 260, pad = 16;
+    const pts = ds.items.map(it => ({ it, x: dot(it.z, U[a]), y: dot(it.z, U[b]), m: inG.has(it) }));
+    const ext = Math.max(...pts.map(p => Math.max(Math.abs(p.x), Math.abs(p.y)))) * 1.08 || 1;
+    const k = (H - 2 * pad) / (2 * ext);
+    const X = x => W / 2 + x * k, Y = y => H / 2 - y * k;
+    g = '<svg class="sc" viewBox="0 0 ' + W + " " + H + '" role="img" aria-label="States projected onto this basis">' +
       '<line class="ax" x1="' + pad + '" x2="' + (W - pad) + '" y1="' + H / 2 + '" y2="' + H / 2 + '"/>' +
-      '<text class="al" x="' + (W - pad) + '" y="' + (H / 2 - 5) + '" text-anchor="end">' + sym + SUB[0] + " →</text>";
-    if (U.length > 1) g += '<line class="ax" x1="' + W / 2 + '" x2="' + W / 2 + '" y1="' + pad + '" y2="' + (H - pad) + '"/>' +
-      '<text class="al" x="' + (W / 2 + 5) + '" y="' + (pad + 8) + '">' + sym + SUB[1] + " ↑</text>";
-    // States outside the group are drawn small and faded; the group's states full size and labeled.
+      '<text class="al" x="' + (W - pad) + '" y="' + (H / 2 - 5) + '" text-anchor="end">' + sym + SUB[a] + " →</text>" +
+      '<line class="ax" x1="' + W / 2 + '" x2="' + W / 2 + '" y1="' + pad + '" y2="' + (H - pad) + '"/>' +
+      '<text class="al" x="' + (W / 2 + 5) + '" y="' + (pad + 8) + '">' + sym + SUB[b] + " ↑</text>";
     pts.filter(p => !p.m).forEach(p => (g += marker(p.it.g, X(p.x), Y(p.y), 2.6, " dim")));
     pts.filter(p => p.m).forEach(p => {
       g += marker(p.it.g, X(p.x), Y(p.y), 4.2) +
         '<text class="lb" x="' + (X(p.x) + 6).toFixed(1) + '" y="' + (Y(p.y) + 3).toFixed(1) + '">' + ds.postal[p.it.name] + "</text>";
     });
-    pts.forEach(p => {
-      const t = p.it.name + " (" + ds.groups[p.it.g] + ") · " + sym + SUB[0] + " " + f2(p.x) + (U.length > 1 ? " · " + sym + SUB[1] + " " + f2(p.y) : "");
-      g += '<circle class="hit" cx="' + X(p.x).toFixed(1) + '" cy="' + Y(p.y).toFixed(1) + '" r="8" data-t="' + esc(t) + '"/>';
-    });
-    return g + "</svg>";
+    pts.forEach(p => (hits += '<circle class="hit" cx="' + X(p.x).toFixed(1) + '" cy="' + Y(p.y).toFixed(1) + '" r="8" data-t="' +
+      esc(tip(p, sym + SUB[a] + " " + f2(p.x) + " · " + sym + SUB[b] + " " + f2(p.y))) + '"/>'));
+    return g + hits + "</svg>";
   }
 
   function barStyle(v) {
@@ -105,8 +134,9 @@
       const cnt = items.length;
       const cls = which === 1 ? "s1" : "s2", sym = which === 1 ? "u" : "v";
       let h = '<h4><span class="sw ' + cls + '"></span>S' + SUB[which - 1] + " · " + esc(label) + " <small>" + cnt + " " + ds.noun + "</small></h4>" +
-        scatter(ds, items, U, cls, sym) + '<p class="cap">All 50 states projected onto this basis' +
-        (U.length > 2 ? " (" + sym + SUB[2] + " not shown)" : "") + ", by region. " +
+        scatter(ds, items, U, sym) + '<p class="cap">All 50 states projected onto ' +
+        (U.length === 1 ? sym + SUB[0] + ", one lane per region. " : U.length > 2
+          ? sym + SUB[st.pair[0]] + " and " + sym + SUB[st.pair[1]] + " (pick the pair under Plot axes). " : "this basis. ") +
         (items.length === ds.items.length ? "" : esc(label) + " full size and labeled. ") + "Hover a mark for the state.</p>";
       U.forEach((v, k) => {
         const meta = rotated ? "rotated basis vector" : Math.round(frac[k] * 100) + "% of the group's variance";
@@ -167,6 +197,8 @@
       '</div><p class="fine" style="margin:0">Ranges are 5th to 95th percentiles: 400 random subspace pairs for the floor, 80 random half-splits for each ceiling.</p>';
 
     $("unrot").disabled = !st.rot;
+    $("pairs").hidden = r < 3;
+    document.querySelectorAll("#pairseg button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.pair === st.pair.join(","))));
   }
   function supN(n) { return String(n).split("").map(d => "⁰¹²³⁴⁵⁶⁷⁸⁹"[+d]).join(""); }
 
@@ -187,7 +219,7 @@
 
   if (typeof document !== "undefined" && document.getElementById("lab")) {
     document.querySelectorAll("#rseg button").forEach(b => (b.onclick = () => {
-      st.r = +b.dataset.r; st.rot = null;
+      st.r = +b.dataset.r; st.rot = null; st.pair = [0, 1];
       document.querySelectorAll("#rseg button").forEach(x => x.setAttribute("aria-pressed", String(x === b)));
       render();
     }));
@@ -206,6 +238,7 @@
     lab.addEventListener("pointerleave", () => (tip.hidden = true));
     $("rot").onclick = () => { st.rotSeed++; st.rot = randomRotation(st.r, st.rotSeed); render(); };
     $("unrot").onclick = () => { st.rot = null; render(); };
+    document.querySelectorAll("#pairseg button").forEach(b => (b.onclick = () => { st.pair = b.dataset.pair.split(",").map(Number); render(); }));
     setDs("us");
   }
 })();
