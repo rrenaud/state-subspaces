@@ -68,6 +68,14 @@ td.n { text-align: right; font-family: var(--mono); white-space: nowrap; }
 .rg { stroke: var(--panel); stroke-width: 1.2; }
 .rN { fill: var(--rN); } .rM { fill: var(--rM); } .rS { fill: var(--rS); } .rW { fill: var(--rW); }
 .sc .dim { opacity: .35; stroke-width: .6; }
+.sc .rg.hl { stroke: var(--fg); stroke-width: 2; opacity: 1; }
+.bz { display: none; text-align: right; color: var(--muted); font-variant-numeric: tabular-nums; }
+.lab.hovering #b1 .br, .lab.hovering #b2 .br { grid-template-columns: 5.6rem 2.8rem minmax(0, 1fr) 3.6rem; opacity: 1; }
+.lab.hovering #b1 .bz, .lab.hovering #b2 .bz { display: block; }
+.lab.hovering #b1 .br > span:first-child, .lab.hovering #b2 .br > span:first-child,
+.lab.hovering #b1 .br .bv, .lab.hovering #b2 .br .bv { color: var(--muted); font-weight: 400; }
+.lab.hovering #b1 .br.big > span:first-child, .lab.hovering #b2 .br.big > span:first-child,
+.lab.hovering #b1 .br.big .bv, .lab.hovering #b2 .br.big .bv { color: var(--fg); font-weight: 600; }
 .rlegend { display: flex; flex-wrap: wrap; gap: .4rem 1.1rem; font-size: .85rem; color: var(--fg); }
 .rlegend span { display: inline-flex; align-items: center; gap: .35rem; }
 .sc .lb { fill: var(--fg); font-size: 8.5px; pointer-events: none; }

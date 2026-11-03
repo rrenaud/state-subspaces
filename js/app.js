@@ -3,6 +3,7 @@
   "use strict";
   const { dot, mulberry32, pca, randomBasis, combine, compare, members, floorStats } = Subspace;
   const DS = { us: Subspace.prepare(STATES) };
+  STATES.items.forEach((it, i) => (it.i = i));
   const ceilStats = (g, r) => Subspace.ceilStats(g, members(STATES, g).map(it => it.z), r);
   const SUB = ["₁", "₂", "₃"];
 
@@ -34,8 +35,8 @@
   // All 50 states projected onto a basis, equal scale on both axes; the group's states are colored and labeled.
   // Each region has a color and a shape, so regions stay apart without relying on color alone.
   const SHAPE = { N: "circle", M: "square", S: "triangle", W: "diamond" };
-  function marker(g, x, y, s, extra) {
-    const c = ' class="rg r' + g + (extra || "") + '"';
+  function marker(g, x, y, s, extra, i) {
+    const c = ' class="rg r' + g + (extra || "") + '"' + (i == null ? "" : ' data-i="' + i + '"');
     switch (SHAPE[g]) {
       case "square": return "<rect" + c + ' x="' + (x - s * .88).toFixed(1) + '" y="' + (y - s * .88).toFixed(1) + '" width="' + (s * 1.76).toFixed(1) + '" height="' + (s * 1.76).toFixed(1) + '"/>';
       case "triangle": return "<path" + c + ' d="M' + x.toFixed(1) + " " + (y - s * 1.15).toFixed(1) + "L" + (x + s * 1.1).toFixed(1) + " " + (y + s * .8).toFixed(1) + "L" + (x - s * 1.1).toFixed(1) + " " + (y + s * .8).toFixed(1) + 'Z"/>';
@@ -68,7 +69,7 @@
         g += '<line class="lane" x1="' + left + '" x2="' + (W - pad) + '" y1="' + y + '" y2="' + y + '"/>' +
           '<text class="al" x="0" y="' + (y + 3.5) + '">' + esc(ds.groups[r]) + "</text>";
         const lp = pts.filter(p => p.it.g === r);
-        lp.filter(p => !p.m).forEach(p => (g += marker(r, X(p.x), y, 2.6, " dim")));
+        lp.filter(p => !p.m).forEach(p => (g += marker(r, X(p.x), y, 2.6, " dim", p.it.i)));
         // Greedy label rows: each label takes the first row (just above, just below, then further out) whose
         // previous label is at least a label's width to the left, or else the row that has been free longest.
         const rows = [-7, 13, -16, 22], last = rows.map(() => -Infinity);
@@ -77,10 +78,10 @@
           let ri = rows.findIndex((_, i) => x - last[i] >= 12);
           if (ri < 0) ri = last.indexOf(Math.min(...last));
           last[ri] = x;
-          g += marker(r, x, y, 4) +
+          g += marker(r, x, y, 4, "", p.it.i) +
             '<text class="lb" text-anchor="middle" x="' + x.toFixed(1) + '" y="' + (y + rows[ri]).toFixed(1) + '">' + ds.postal[p.it.name] + "</text>";
         });
-        lp.forEach(p => (hits += '<circle class="hit" cx="' + X(p.x).toFixed(1) + '" cy="' + y + '" r="6" data-t="' + esc(tip(p, sym + SUB[0] + " " + f2(p.x))) + '"/>'));
+        lp.forEach(p => (hits += '<circle class="hit" data-i="' + p.it.i + '" cx="' + X(p.x).toFixed(1) + '" cy="' + y + '" r="6" data-t="' + esc(tip(p, sym + SUB[0] + " " + f2(p.x))) + '"/>'));
       });
       return g + hits + "</svg>";
     }
@@ -95,12 +96,12 @@
       '<text class="al" x="' + (W - pad) + '" y="' + (H / 2 - 5) + '" text-anchor="end">' + sym + SUB[a] + " →</text>" +
       '<line class="ax" x1="' + W / 2 + '" x2="' + W / 2 + '" y1="' + pad + '" y2="' + (H - pad) + '"/>' +
       '<text class="al" x="' + (W / 2 + 5) + '" y="' + (pad + 8) + '">' + sym + SUB[b] + " ↑</text>";
-    pts.filter(p => !p.m).forEach(p => (g += marker(p.it.g, X(p.x), Y(p.y), 2.6, " dim")));
+    pts.filter(p => !p.m).forEach(p => (g += marker(p.it.g, X(p.x), Y(p.y), 2.6, " dim", p.it.i)));
     pts.filter(p => p.m).forEach(p => {
-      g += marker(p.it.g, X(p.x), Y(p.y), 4.2) +
+      g += marker(p.it.g, X(p.x), Y(p.y), 4.2, "", p.it.i) +
         '<text class="lb" x="' + (X(p.x) + 6).toFixed(1) + '" y="' + (Y(p.y) + 3).toFixed(1) + '">' + ds.postal[p.it.name] + "</text>";
     });
-    pts.forEach(p => (hits += '<circle class="hit" cx="' + X(p.x).toFixed(1) + '" cy="' + Y(p.y).toFixed(1) + '" r="8" data-t="' +
+    pts.forEach(p => (hits += '<circle class="hit" data-i="' + p.it.i + '" cx="' + X(p.x).toFixed(1) + '" cy="' + Y(p.y).toFixed(1) + '" r="8" data-t="' +
       esc(tip(p, sym + SUB[a] + " " + f2(p.x) + " · " + sym + SUB[b] + " " + f2(p.y))) + '"/>'));
     return g + hits + "</svg>";
   }
@@ -112,9 +113,42 @@
   function bars(feats, series) {
     const two = series.length === 2;
     return '<div class="bars">' + feats.map((f, j) =>
-      '<div class="br' + rowCls(series, j) + '"><span>' + esc(f) + '</span><span class="bt">' +
+      '<div class="br' + rowCls(series, j) + '"><span>' + esc(f) + '</span><span class="bz"></span><span class="bt">' +
       series.map((s, k) => '<i class="bar ' + s.cls + (two ? (k ? " bot" : " top") : "") + '" style="' + barStyle(s.v[j]) + '"></i>').join("") +
-      '</span><span class="bv">' + series.map(s => f2(s.v[j])).join(" ") + "</span></div>").join("") + "</div>";
+      '</span><span class="bv" data-w="' + series.map(s => f2(s.v[j])).join(" ") + '">' + series.map(s => f2(s.v[j])).join(" ") + "</span></div>").join("") + "</div>";
+  }
+
+  // Hovering a state writes its z-score and z × weight on every row of each basis vector; the products sum to
+  // the state's coordinate along that vector. The same state is ringed in both plots.
+  const sgn = x => (x >= 0 ? "+" : "−") + Math.abs(x).toFixed(2);
+  function showState(i) {
+    const it = STATES.items[i];
+    document.querySelectorAll("#b1 .vec, #b2 .vec").forEach(el => {
+      const v = st.view[el.dataset.p][+el.dataset.k];
+      let sum = 0;
+      el.querySelectorAll(".br").forEach((row, j) => {
+        const c = it.z[j] * v[j];
+        sum += c;
+        row.querySelector(".bz").textContent = sgn(it.z[j]);
+        row.querySelector(".bv").textContent = sgn(c);
+        row.classList.toggle("big", Math.abs(c) >= 0.3);
+      });
+      el.querySelector(".vt span").textContent = "· " + it.name + ": z × weight sums to " + sgn(sum);
+    });
+    document.querySelectorAll(".sc .hl").forEach(m => m.classList.remove("hl"));
+    document.querySelectorAll('.sc .rg[data-i="' + i + '"]').forEach(m => m.classList.add("hl"));
+    $("lab").classList.add("hovering");
+  }
+  function clearState() {
+    if (!$("lab").classList.contains("hovering")) return;
+    document.querySelectorAll("#b1 .br, #b2 .br").forEach(row => {
+      row.querySelector(".bz").textContent = "";
+      row.querySelector(".bv").textContent = row.querySelector(".bv").dataset.w;
+      row.classList.remove("big");
+    });
+    document.querySelectorAll("#b1 .vt span, #b2 .vt span").forEach(sp => (sp.textContent = sp.dataset.meta));
+    document.querySelectorAll(".sc .hl").forEach(m => m.classList.remove("hl"));
+    $("lab").classList.remove("hovering");
   }
 
   function randomRotation(r, seed) {
@@ -140,11 +174,13 @@
         (items.length === ds.items.length ? "" : esc(label) + " full size and labeled. ") + "Hover a mark for the state.</p>";
       U.forEach((v, k) => {
         const meta = rotated ? "rotated basis vector" : Math.round(frac[k] * 100) + "% of the group's variance";
-        h += '<div class="vec"><div class="vt">' + sym + SUB[k] + " <span>· " + meta + '</span></div><div class="vd">' +
+        h += '<div class="vec" data-p="' + which + '" data-k="' + k + '"><div class="vt">' + sym + SUB[k] +
+          ' <span data-meta="· ' + esc(meta) + '">· ' + esc(meta) + '</span></div><div class="vd">' +
           esc(describe(v, feats)) + "</div>" + ends(items, v) + bars(feats, [{ v, cls }]) + "</div>";
       });
       return h;
     };
+    st.view = { 1: U1, 2: p2.U };
     $("b1").innerHTML = basisPanel(1, ds.groups[st.g1], I1, U1, p1.frac, !!st.rot);
     $("b2").innerHTML = basisPanel(2, ds.groups[st.g2], I2, p2.U, p2.frac, false);
 
@@ -229,13 +265,14 @@
     tip.className = "tip"; tip.hidden = true; lab.appendChild(tip);
     lab.addEventListener("pointermove", e => {
       const t = e.target.closest && e.target.closest(".hit");
-      if (!t) { tip.hidden = true; return; }
+      if (!t) { tip.hidden = true; clearState(); return; }
       tip.textContent = t.dataset.t; tip.hidden = false;
+      showState(+t.dataset.i);
       const b = lab.getBoundingClientRect();
       tip.style.left = Math.max(4, Math.min(e.clientX - b.left + 12, b.width - tip.offsetWidth - 4)) + "px";
       tip.style.top = (e.clientY - b.top + 14) + "px";
     });
-    lab.addEventListener("pointerleave", () => (tip.hidden = true));
+    lab.addEventListener("pointerleave", () => { tip.hidden = true; clearState(); });
     $("rot").onclick = () => { st.rotSeed++; st.rot = randomRotation(st.r, st.rotSeed); render(); };
     $("unrot").onclick = () => { st.rot = null; render(); };
     document.querySelectorAll("#pairseg button").forEach(b => (b.onclick = () => { st.pair = b.dataset.pair.split(",").map(Number); render(); }));
