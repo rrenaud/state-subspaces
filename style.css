@@ -81,6 +81,15 @@ td.n { text-align: right; font-family: var(--mono); white-space: nowrap; }
 .zt { top: -2px; height: 18px; width: 2px; margin-left: -1px; background: var(--fg); border-radius: 1px; }
 .lab.hovering .zp, .lab.hovering .zt { display: block; }
 .lab.hovering #b1 .bar, .lab.hovering #b2 .bar { opacity: .25; }
+.srow { display: grid; grid-template-columns: 5.6rem 2.8rem minmax(0, 1fr) 3.6rem; gap: .5rem; align-items: center;
+  font-family: var(--mono); font-size: .72rem; margin-top: 4px; padding-top: 5px; border-top: 1px solid var(--rule); visibility: hidden; }
+.lab.hovering .srow { visibility: visible; }
+.srow > span:first-child, .srow .bv { color: var(--fg); font-weight: 600; }
+.srow .bz { display: block; text-align: right; color: var(--muted); }
+.srow .bv { text-align: right; font-variant-numeric: tabular-nums; }
+.seg { position: absolute; top: 3px; height: 8px; box-shadow: inset -1px 0 0 var(--panel), inset 1px 0 0 var(--panel); }
+.seg.s1 { background: var(--s1); } .seg.s2 { background: var(--s2); }
+.srow .zt { display: block; }
 .lab.hovering #b1 .br > span:first-child, .lab.hovering #b2 .br > span:first-child,
 .lab.hovering #b1 .br .bv, .lab.hovering #b2 .br .bv { color: var(--muted); font-weight: 400; }
 .lab.hovering #b1 .br.hot > span:first-child, .lab.hovering #b2 .br.hot > span:first-child,

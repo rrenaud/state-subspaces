@@ -146,11 +146,38 @@
         row.querySelector(".zt").style.left = zpos(it.z[j]) + "%";
         row.classList.toggle("hot", Math.abs(c) >= 0.3);
       });
+      sumRow(el.querySelector(".srow"), it.z.map((z, j) => z * v[j]), sum);
       el.querySelector(".vt span").textContent = "· " + it.name + ": z × weight sums to " + sgn(sum);
     });
     document.querySelectorAll(".sc .hl").forEach(m => m.classList.remove("hl"));
     document.querySelectorAll('.sc .rg[data-i="' + i + '"]').forEach(m => m.classList.add("hl"));
     $("lab").classList.add("hovering");
+  }
+  // The sum row stacks the products on the vector's own scale: positive ones rightward from 0, negative ones
+  // leftward, in feature order. The black tick is where they net out, the state's coordinate.
+  function sumRow(row, cs, sum) {
+    const m = +row.dataset.max, x = t => 50 + 50 * t / m;
+    let pos = 0, neg = 0, h = "";
+    cs.forEach(c => {
+      if (Math.abs(c) < 1e-9) return;
+      const a = c > 0 ? pos : neg, b = a + c;
+      if (c > 0) pos = b; else neg = b;
+      h += '<i class="seg ' + row.dataset.cls + '" style="left:' + Math.min(x(a), x(b)) + "%;width:" + Math.abs(x(b) - x(a)) + '%"></i>';
+    });
+    row.querySelector(".bt").innerHTML = h + '<i class="zt" style="left:' + x(sum) + '%"></i>';
+    row.querySelector(".bv").textContent = sgn(sum);
+  }
+  // The sum row's scale is fixed per vector: wide enough for every state's stacked products, rounded up to 0.5.
+  function sumScale(ds, v, cls) {
+    let m = 0;
+    ds.items.forEach(it => {
+      let p = 0, n = 0;
+      it.z.forEach((z, j) => (z * v[j] > 0 ? (p += z * v[j]) : (n -= z * v[j])));
+      m = Math.max(m, p, n);
+    });
+    m = Math.ceil(m * 2) / 2;
+    return '<div class="srow" data-max="' + m + '" data-cls="' + cls + '"><span>Sum</span><span class="bz">±' + m.toFixed(1) +
+      '</span><span class="bt"></span><span class="bv"></span></div>';
   }
   function clearState() {
     if (shown < 0) return;
@@ -159,6 +186,10 @@
       row.querySelector(".bz").textContent = "";
       row.querySelector(".bv").textContent = row.querySelector(".bv").dataset.w;
       row.classList.remove("hot");
+    });
+    document.querySelectorAll("#b1 .srow, #b2 .srow").forEach(row => {
+      row.querySelector(".bt").innerHTML = "";
+      row.querySelector(".bv").textContent = "";
     });
     document.querySelectorAll("#b1 .vt span, #b2 .vt span").forEach(sp => (sp.textContent = sp.dataset.meta));
     document.querySelectorAll(".sc .hl").forEach(m => m.classList.remove("hl"));
@@ -187,12 +218,12 @@
         scatter(ds, items, U, sym) + '<p class="cap">All 50 states projected onto ' +
         (U.length === 1 ? sym + SUB[0] + ", one lane per region. " : U.length > 2
           ? sym + SUB[st.pair[0]] + " and " + sym + SUB[st.pair[1]] + " (pick the pair under Plot axes). " : "this basis. ") +
-        (items.length === ds.items.length ? "" : esc(label) + " full size and labeled. ") + "Hover a mark for the state: on each row the faded bar is the weight, the solid bar on the same scale is z × weight, and the black tick is the z-score on a ±3 scale.</p>";
+        (items.length === ds.items.length ? "" : esc(label) + " full size and labeled. ") + "Hover a mark for the state: on each row the faded bar is the weight, the solid bar on the same scale is z × weight, and the black tick is the z-score on a ±3 scale. The Sum row stacks the products on its own scale, and its tick is the state's coordinate.</p>";
       U.forEach((v, k) => {
         const meta = rotated ? "rotated basis vector" : Math.round(frac[k] * 100) + "% of the group's variance";
         h += '<div class="vec" data-p="' + which + '" data-k="' + k + '"><div class="vt">' + sym + SUB[k] +
           ' <span data-meta="· ' + esc(meta) + '">· ' + esc(meta) + '</span></div><div class="vd">' +
-          esc(describe(v, feats)) + "</div>" + ends(items, v) + bars(feats, [{ v, cls }], true) + "</div>";
+          esc(describe(v, feats)) + "</div>" + ends(items, v) + bars(feats, [{ v, cls }], true) + sumScale(ds, v, cls) + "</div>";
       });
       return h;
     };
