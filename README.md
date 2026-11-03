@@ -8,8 +8,6 @@ its coordinates come from its z-scores and the basis weights.
 
 [![Screenshot: All states vs the South, Massachusetts hovered](docs/screenshot.png)](https://rrenaud.github.io/state-subspaces/)
 
-The state figures are approximate, typed from memory for illustration. Don't cite them.
-
 ## Run locally
 
 No build step and no dependencies: open `index.html` in a browser.
