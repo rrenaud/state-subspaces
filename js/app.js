@@ -166,7 +166,7 @@
       });
       sumRow(el.querySelector(".srow"), it.z.map((z, j) => z * v[j]), sum);
       el.querySelector(".bh span:last-child").textContent = "z × w";
-      el.querySelector(".vt span").textContent = "· " + it.name + " " + sgn(sum);
+      el.querySelector(".vt span").textContent = "· " + STATES.postal[it.name] + " " + sgn(sum);
     });
     document.querySelectorAll(".sc .hl").forEach(m => m.classList.remove("hl"));
     document.querySelectorAll('.sc .rg[data-i="' + i + '"]').forEach(m => m.classList.add("hl"));
