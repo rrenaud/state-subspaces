@@ -36,6 +36,9 @@
     if (!top.length) return { hi: "mixed", lo: "mixed" };
     return { hi: top.map(t => t[0]).join(", "), lo: top.map(t => t[1].lo).join(", ") };
   }
+  // A name is tied to its own vector, e.g. u₂ “older”: the quotes mark it as a rough reading, and u₂ and v₂ can
+  // both read “older” while being different directions.
+  const tag = (sym, k, word) => sym + SUB[k] + " “" + esc(word) + "”";
   // Rows whose weight matters are emphasized; near-zero rows fade.
   function rowCls(series, j) {
     const m = Math.max(...series.map(s => Math.abs(s.v[j])));
@@ -72,8 +75,8 @@
       const X = x => left + (x / ext + 1) / 2 * (W - left - pad);
       g = '<svg class="sc" viewBox="0 0 ' + W + " " + H + '" role="img" aria-label="States by region along ' + sym + SUB[0] + '">' +
         '<line class="ax" x1="' + X(0) + '" x2="' + X(0) + '" y1="' + top + '" y2="' + (top + lanes.length * laneH) + '"/>' +
-        '<text class="al nm" x="' + (W - pad) + '" y="' + (H - 4) + '" text-anchor="end">' + sym + SUB[0] + " " + esc(nameEnds(U[0]).hi) + " →</text>" +
-        '<text class="al nm" x="' + left + '" y="' + (H - 4) + '">← ' + esc(nameEnds(U[0]).lo) + "</text>";
+        '<text class="al nm" x="' + (W - pad) + '" y="' + (H - 4) + '" text-anchor="end">' + tag(sym, 0, nameEnds(U[0]).hi) + " →</text>" +
+        '<text class="al nm" x="' + left + '" y="' + (H - 4) + '">← ' + tag(sym, 0, nameEnds(U[0]).lo) + "</text>";
       lanes.forEach((r, li) => {
         const y = top + li * laneH + laneH / 2;
         g += '<line class="lane" x1="' + left + '" x2="' + (W - pad) + '" y1="' + y + '" y2="' + y + '"/>' +
@@ -106,12 +109,10 @@
     g = '<svg class="sc" viewBox="0 0 ' + W + " " + Ht + '" role="img" aria-label="States projected onto this basis">' +
       '<line class="ax" x1="' + pad + '" x2="' + (W - pad) + '" y1="' + (mt + H / 2) + '" y2="' + (mt + H / 2) + '"/>' +
       '<line class="ax" x1="' + W / 2 + '" x2="' + W / 2 + '" y1="' + (mt + pad) + '" y2="' + (mt + H - pad) + '"/>' +
-      '<text class="al" x="' + (W - pad) + '" y="' + (mt + H / 2 - 5) + '" text-anchor="end">' + sym + SUB[a] + " →</text>" +
-      '<text class="al" x="' + (W / 2 + 5) + '" y="' + (mt + pad + 8) + '">' + sym + SUB[b] + " ↑</text>" +
-      '<text class="al nm" x="' + W / 2 + '" y="' + (mt - 3) + '" text-anchor="middle">↑ ' + esc(nb.hi) + "</text>" +
-      '<text class="al nm" x="' + W / 2 + '" y="' + (mt + H + 9) + '" text-anchor="middle">↓ ' + esc(nb.lo) + "</text>" +
-      '<text class="al nm" x="' + pad + '" y="' + (Ht - 3) + '">← ' + esc(na.lo) + "</text>" +
-      '<text class="al nm" x="' + (W - pad) + '" y="' + (Ht - 3) + '" text-anchor="end">' + esc(na.hi) + " →</text>";
+      '<text class="al nm" x="' + W / 2 + '" y="' + (mt - 3) + '" text-anchor="middle">↑ ' + tag(sym, b, nb.hi) + "</text>" +
+      '<text class="al nm" x="' + W / 2 + '" y="' + (mt + H + 9) + '" text-anchor="middle">↓ ' + tag(sym, b, nb.lo) + "</text>" +
+      '<text class="al nm" x="' + pad + '" y="' + (Ht - 3) + '">← ' + tag(sym, a, na.lo) + "</text>" +
+      '<text class="al nm" x="' + (W - pad) + '" y="' + (Ht - 3) + '" text-anchor="end">' + tag(sym, a, na.hi) + " →</text>";
     pts.filter(p => !p.m).forEach(p => (g += marker(p.it.g, X(p.x), Y(p.y), 2.6, " dim", p.it.i)));
     pts.filter(p => p.m).forEach(p => {
       g += marker(p.it.g, X(p.x), Y(p.y), 4.2, "", p.it.i) +
@@ -239,7 +240,7 @@
         const meta = rotated ? "rotated basis vector" : Math.round(frac[k] * 100) + "% of the group's variance";
         const nm = nameEnds(v);
         h += '<div class="vec" data-p="' + which + '" data-k="' + k + '"><div class="vt">' + sym + SUB[k] +
-          ' <b class="vn">' + esc(nm.hi) + " ↔ " + esc(nm.lo) + '</b> <span data-meta="· ' + esc(meta) + '">· ' + esc(meta) + "</span></div>" +
+           ' <b class="vn">“' + esc(nm.hi) + "” ↔ “" + esc(nm.lo) + '”</b> <span data-meta="· ' + esc(meta) + '">· ' + esc(meta) + "</span></div>" +
           bars(feats, [{ v, cls }], true) + sumScale(ds, v, cls) + "</div>";
       });
       return h;
