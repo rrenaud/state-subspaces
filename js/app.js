@@ -32,6 +32,21 @@
     return '<div class="ends"><span title="' + esc(hi) + '">▲ ' + esc(hi) + '</span><span title="' + esc(lo) + '">▼ ' + esc(lo) + "</span></div>";
   }
   // All 50 states projected onto a basis, equal scale on both axes; the group's states are colored and labeled.
+  // Each region has a color and a shape, so regions stay apart without relying on color alone.
+  const SHAPE = { N: "circle", M: "square", S: "triangle", W: "diamond" };
+  function marker(g, x, y, s, extra) {
+    const c = ' class="rg r' + g + (extra || "") + '"';
+    switch (SHAPE[g]) {
+      case "square": return "<rect" + c + ' x="' + (x - s * .88).toFixed(1) + '" y="' + (y - s * .88).toFixed(1) + '" width="' + (s * 1.76).toFixed(1) + '" height="' + (s * 1.76).toFixed(1) + '"/>';
+      case "triangle": return "<path" + c + ' d="M' + x.toFixed(1) + " " + (y - s * 1.15).toFixed(1) + "L" + (x + s * 1.1).toFixed(1) + " " + (y + s * .8).toFixed(1) + "L" + (x - s * 1.1).toFixed(1) + " " + (y + s * .8).toFixed(1) + 'Z"/>';
+      case "diamond": return "<path" + c + ' d="M' + x.toFixed(1) + " " + (y - s * 1.2).toFixed(1) + "L" + (x + s * 1.2).toFixed(1) + " " + y.toFixed(1) + "L" + x.toFixed(1) + " " + (y + s * 1.2).toFixed(1) + "L" + (x - s * 1.2).toFixed(1) + " " + y.toFixed(1) + 'Z"/>';
+      default: return "<circle" + c + ' cx="' + x.toFixed(1) + '" cy="' + y.toFixed(1) + '" r="' + s + '"/>';
+    }
+  }
+  function regionLegend(ds) {
+    return Object.keys(SHAPE).map(g => '<span><svg viewBox="0 0 12 12" width="12" height="12" aria-hidden="true">' + marker(g, 6, 6, 4.2) + "</svg>" + esc(ds.groups[g]) + "</span>").join("");
+  }
+
   function scatter(ds, members, U, cls, sym) {
     const W = 300, H = U.length > 1 ? 260 : 130, pad = 16;
     const inG = new Set(members);
@@ -48,10 +63,11 @@
       '<text class="al" x="' + (W - pad) + '" y="' + (H / 2 - 5) + '" text-anchor="end">' + sym + SUB[0] + " →</text>";
     if (U.length > 1) g += '<line class="ax" x1="' + W / 2 + '" x2="' + W / 2 + '" y1="' + pad + '" y2="' + (H - pad) + '"/>' +
       '<text class="al" x="' + (W / 2 + 5) + '" y="' + (pad + 8) + '">' + sym + SUB[1] + " ↑</text>";
-    pts.filter(p => !p.m).forEach(p => (g += '<circle class="o" cx="' + X(p.x).toFixed(1) + '" cy="' + Y(p.y).toFixed(1) + '" r="2.5"/>'));
+    // States outside the group are drawn small and faded; the group's states full size and labeled.
+    pts.filter(p => !p.m).forEach(p => (g += marker(p.it.g, X(p.x), Y(p.y), 2.6, " dim")));
     pts.filter(p => p.m).forEach(p => {
-      g += '<circle class="' + cls + '" cx="' + X(p.x).toFixed(1) + '" cy="' + Y(p.y).toFixed(1) + '" r="4"/>' +
-        '<text class="lb" x="' + (X(p.x) + 5.5).toFixed(1) + '" y="' + (Y(p.y) + 3).toFixed(1) + '">' + ds.postal[p.it.name] + "</text>";
+      g += marker(p.it.g, X(p.x), Y(p.y), 4.2) +
+        '<text class="lb" x="' + (X(p.x) + 6).toFixed(1) + '" y="' + (Y(p.y) + 3).toFixed(1) + '">' + ds.postal[p.it.name] + "</text>";
     });
     pts.forEach(p => {
       const t = p.it.name + " (" + ds.groups[p.it.g] + ") · " + sym + SUB[0] + " " + f2(p.x) + (U.length > 1 ? " · " + sym + SUB[1] + " " + f2(p.y) : "");
@@ -90,7 +106,8 @@
       const cls = which === 1 ? "s1" : "s2", sym = which === 1 ? "u" : "v";
       let h = '<h4><span class="sw ' + cls + '"></span>S' + SUB[which - 1] + " · " + esc(label) + " <small>" + cnt + " " + ds.noun + "</small></h4>" +
         scatter(ds, items, U, cls, sym) + '<p class="cap">All 50 states projected onto this basis' +
-        (U.length > 2 ? " (" + sym + SUB[2] + " not shown)" : "") + ". " + esc(label) + " colored. Hover a dot for the state.</p>";
+        (U.length > 2 ? " (" + sym + SUB[2] + " not shown)" : "") + ", by region. " +
+        (items.length === ds.items.length ? "" : esc(label) + " full size and labeled. ") + "Hover a mark for the state.</p>";
       U.forEach((v, k) => {
         const meta = rotated ? "rotated basis vector" : Math.round(frac[k] * 100) + "% of the group's variance";
         h += '<div class="vec"><div class="vt">' + sym + SUB[k] + " <span>· " + meta + '</span></div><div class="vd">' +
@@ -160,6 +177,7 @@
         '<option value="' + k + '"' + (st[id] === k ? " selected" : "") + ">" + esc(label) + " (" + members(ds, k).length + ")</option>").join("");
     });
     $("dsnote").textContent = ds.note;
+    $("rlegend").innerHTML = regionLegend(ds);
   }
 
   function setDs(k) {

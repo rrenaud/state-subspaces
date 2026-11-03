@@ -47,9 +47,9 @@ table { border-collapse: collapse; width: 100%; font-size: .9rem; font-variant-n
 th, td { text-align: left; padding: .45rem .6rem; border-bottom: 1px solid var(--rule); vertical-align: top; }
 th { font-family: var(--display); font-weight: 500; color: var(--muted); font-size: .8rem; letter-spacing: .03em; text-transform: uppercase; }
 td.n { text-align: right; font-family: var(--mono); white-space: nowrap; }
-:root { --s1: #2457c5; --s2: #c2410c; }
-@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --s1: #6690f0; --s2: #e06a2c; } }
-:root[data-theme="dark"] { --s1: #6690f0; --s2: #e06a2c; }
+:root { --s1: #2457c5; --s2: #c2410c; --rN: #6250d6; --rM: #eda100; --rS: #008300; --rW: #e87ba4; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --s1: #6690f0; --s2: #e06a2c; --rN: #9085e9; --rM: #c98500; --rS: #008300; --rW: #d55181; } }
+:root[data-theme="dark"] { --s1: #6690f0; --s2: #e06a2c; --rN: #9085e9; --rM: #c98500; --rS: #008300; --rW: #d55181; }
 .lab { border: 1px solid var(--rule); background: var(--panel); border-radius: 6px; padding: 1rem; display: grid; gap: 1.1rem; margin: 1.5rem 0 .6rem; }
 .seg { display: flex; flex-wrap: wrap; gap: .4rem; }
 .lab button { font-family: var(--display); font-weight: 500; font-size: .85rem; border: 1px solid var(--rule); background: var(--bg); color: var(--fg);
@@ -63,9 +63,11 @@ td.n { text-align: right; font-family: var(--mono); white-space: nowrap; }
 .sc { width: 100%; height: auto; display: block; overflow: visible; }
 .sc .ax { stroke: var(--rule); stroke-width: 1; }
 .sc .al { fill: var(--muted); font-size: 10px; }
-.sc .o { fill: var(--frozen); opacity: .55; }
-.sc .s1, .sc .s2 { stroke: var(--panel); stroke-width: 1.5; }
-.sc .s1 { fill: var(--s1); } .sc .s2 { fill: var(--s2); }
+.rg { stroke: var(--panel); stroke-width: 1.2; }
+.rN { fill: var(--rN); } .rM { fill: var(--rM); } .rS { fill: var(--rS); } .rW { fill: var(--rW); }
+.sc .dim { opacity: .35; stroke-width: .6; }
+.rlegend { display: flex; flex-wrap: wrap; gap: .4rem 1.1rem; font-size: .85rem; color: var(--fg); }
+.rlegend span { display: inline-flex; align-items: center; gap: .35rem; }
 .sc .lb { fill: var(--fg); font-size: 8.5px; pointer-events: none; }
 .sc .hit { fill: transparent; }
 .cap { font-size: .78rem; color: var(--muted); margin: -.3rem 0 0; }
