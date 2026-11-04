@@ -26,10 +26,8 @@
 *, *::before, *::after { box-sizing: border-box; }
 [hidden] { display: none !important; }
 body { margin: 0; background: var(--bg); color: var(--fg); font-family: var(--body); font-size: 17px; line-height: 1.62; }
-.wrap { margin: 0 auto; padding-block: 3rem 5rem;
-  padding-left: max(clamp(16px, 3vw, 48px), env(safe-area-inset-left, 0px)); padding-right: max(clamp(16px, 3vw, 48px), env(safe-area-inset-right, 0px)); }
-/* The tool takes the full window width and its plots scale with it; the prose keeps a readable line length. */
-.wrap > :not(.lab) { max-width: 46rem; margin-inline: auto; }
+.wrap { max-width: 60rem; margin: 0 auto; padding-block: 3rem 5rem;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
 header { display: grid; gap: .5rem; padding-bottom: 1.5rem; border-bottom: 1px solid var(--rule); margin-bottom: 2rem; }
 .eyebrow { font-family: var(--mono); font-size: .75rem; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
 h1 { font-family: var(--display); font-weight: 700; font-size: clamp(2rem, 6vw, 2.8rem); line-height: 1.08; margin: 0; text-wrap: balance; }
